@@ -198,6 +198,40 @@ const PASS_COLOR = '#43a047', FAIL_COLOR = '#c62828';
 const PALETTE     = ['#1565c0','#6a1b9a','#2e7d32','#e65100','#006064'];
 let   ZONE_COLORS = {};
 let   PIDS        = [];
+let   SRV_CATS    = {};
+let   SRV_VIS     = {};
+
+const SRV_ORDER = ['food','retail','health','education','public_services',
+                   'finance','religion','culture','sport','accommodation','green_space','other'];
+
+function toggleServCat(cat) {
+  SRV_VIS[cat] = !SRV_VIS[cat];
+  (SRV_CATS[cat] || []).forEach(key => {
+    const lay = LAYERS[key];
+    if (lay) SRV_VIS[cat] ? MAP.addLayer(lay) : MAP.removeLayer(lay);
+  });
+  const chk = document.getElementById('srv-chk-' + cat);
+  if (chk) chk.classList.toggle('on', SRV_VIS[cat]);
+  const allOn = Object.values(SRV_VIS).every(v => v);
+  const allChk = document.getElementById('srv-chk-all');
+  if (allChk) allChk.classList.toggle('on', allOn);
+}
+
+function toggleAllServCats() {
+  const allOn = Object.values(SRV_VIS).every(v => v);
+  const next = !allOn;
+  Object.keys(SRV_VIS).forEach(cat => {
+    SRV_VIS[cat] = next;
+    (SRV_CATS[cat] || []).forEach(key => {
+      const lay = LAYERS[key];
+      if (lay) next ? MAP.addLayer(lay) : MAP.removeLayer(lay);
+    });
+    const chk = document.getElementById('srv-chk-' + cat);
+    if (chk) chk.classList.toggle('on', next);
+  });
+  const allChk = document.getElementById('srv-chk-all');
+  if (allChk) allChk.classList.toggle('on', next);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -735,29 +769,40 @@ function step8() {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
   }
 
-  // Heatmap
-  const heat = DATA.services.items.map(s => [s.lat, s.lon, 0.6]);
-  addL('heat', L.heatLayer(heat, { radius:18, blur:15, maxZoom:17, minOpacity:0.3 }));
+  // Reset category tracking
+  SRV_CATS = {};
+  SRV_VIS  = {};
 
-  // Service markers by category
+  // Service markers grouped by category
   DATA.services.items.forEach((s, i) => {
     const col = DATA.services.cat_colors[s.cat] || '#9e9e9e';
     const m   = L.circleMarker([s.lat, s.lon], {
-      radius:4, color: col, fillColor: col, fillOpacity:0.8, weight:1
+      radius:5, color:col, fillColor:col, fillOpacity:0.85, weight:1
     });
-    m.bindTooltip(
-      `<b>${s.name}</b><br>${DATA.services.cat_labels[s.cat]||s.cat}`,
-      { sticky:true });
+    m.bindTooltip(`<b>${s.name}</b><br>${DATA.services.cat_labels[s.cat]||s.cat}`, { sticky:true });
     addL('srv_'+i, m);
+    if (!SRV_CATS[s.cat]) SRV_CATS[s.cat] = [];
+    SRV_CATS[s.cat].push('srv_'+i);
+    SRV_VIS[s.cat] = true;
   });
 
-  // Legend: categories
-  const catLeg = Object.entries(DATA.services.cat_colors).map(([cat, col]) => {
-    const n = DATA.services.items.filter(s => s.cat === cat).length;
-    return n ? `<div class="leg-item"><span class="leg-dot" style="background:${col}"></span>${DATA.services.cat_labels[cat]||cat} (${n})</div>` : '';
+  // Build legend with checkboxes
+  const presentCats = SRV_ORDER.filter(c => SRV_CATS[c])
+    .concat(Object.keys(SRV_CATS).filter(c => !SRV_ORDER.includes(c)));
+
+  const catItems = presentCats.map(cat => {
+    const col = DATA.services.cat_colors[cat] || '#9e9e9e';
+    const lbl = DATA.services.cat_labels[cat] || cat;
+    const n   = SRV_CATS[cat].length;
+    return `<div class="leg-item leg-toggle" onclick="toggleServCat('${cat}')">
+      <span class="leg-chk on" id="srv-chk-${cat}"></span>
+      <span class="leg-dot" style="background:${col}"></span>${lbl} (${n})</div>`;
   }).join('');
 
-  setLegend('Step 8 — Services', catLeg);
+  setLegend('Step 8 — Services', `
+    <div class="leg-item leg-toggle" onclick="toggleAllServCats()" style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #444">
+      <span class="leg-chk on" id="srv-chk-all"></span><b>All services</b></div>
+    <div style="max-height:160px;overflow-y:auto">${catItems}</div>`);
 
   const sm = DATA.services.summary;
   setPanel(8,'Phase B — Evaluation','Step 8 — Rule 6: Services Present & Distributed',
