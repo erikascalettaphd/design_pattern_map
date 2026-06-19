@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Seven Rules — Local Transport Areas</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;background:#1a1a2e}
+
+/* ── layout ─────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh}
+#header{flex-shrink:0;background:#1a1a2e;border-bottom:1px solid #333}
+#title-row{display:flex;align-items:center;gap:12px;padding:8px 14px 4px;flex-wrap:wrap}
+#paper-title{font-size:13px;font-weight:600;color:#e0e0e0;flex:1;min-width:160px}
+#city-badge{font-size:11px;color:#90caf9;background:#1e3a5f;padding:2px 8px;border-radius:10px;white-space:nowrap}
+#phase-label{font-size:11px;color:#aaa;white-space:nowrap}
+
+#step-bar{display:flex;overflow-x:auto;gap:4px;padding:6px 10px;scrollbar-width:thin;scrollbar-color:#444 #1a1a2e}
+#step-bar::-webkit-scrollbar{height:4px}
+#step-bar::-webkit-scrollbar-thumb{background:#444}
+.step-btn{
+  flex-shrink:0;border:1px solid #444;background:transparent;color:#999;
+  padding:5px 11px;border-radius:5px;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap
+}
+.step-btn:hover{background:#2a2a4e;color:#ccc}
+.step-btn.active{color:#fff;border-color:transparent}
+.phase-a.active{background:#1565c0}
+.phase-b.active{background:#6a1b9a}
+.phase-b{border-color:#4a1a6e;color:#bb8ae0}
+.step-btn.summary.active{background:#e65100}
+.step-btn.summary{border-color:#7f3100;color:#ffb74d}
+
+/* ── main area ───────────────────────────── */
+#main{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#map{flex:1;min-height:0;z-index:1}
+
+/* ── info panel — mobile: slides from bottom ── */
+#info-panel{
+  flex-shrink:0;
+  background:rgba(15,15,30,0.95);color:#e0e0e0;
+  padding:10px 14px;
+  max-height:38vh;overflow-y:auto;
+  border-top:1px solid #333;
+  transition:max-height .25s ease
+}
+#info-panel.collapsed{max-height:32px;overflow:hidden}
+#panel-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;margin-bottom:6px
+}
+#panel-toggle span{font-size:12px;color:#90caf9;font-weight:600}
+#panel-arrow{font-size:14px;color:#90caf9;transition:transform .2s}
+.collapsed #panel-arrow{transform:rotate(180deg)}
+#step-title-text{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+#step-desc-text{font-size:12px;color:#aaa;line-height:1.5;margin-bottom:8px}
+#step-stats-text{font-size:12px;line-height:1.6}
+
+/* verdicts row */
+.verdict-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.verdict-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;
+  border-radius:6px;font-size:12px;font-weight:600;flex:1;min-width:130px
+}
+.verdict-pass{background:#1b5e20;color:#a5d6a7}
+.verdict-fail{background:#b71c1c;color:#ef9a9a}
+.verdict-icon{font-size:16px}
+.verdict-detail{font-size:11px;font-weight:400;opacity:.85;display:block}
+
+/* rule matrix (step 10) */
+.rule-matrix{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.zone-card{flex:1;min-width:180px;background:#0d1b2a;border-radius:8px;padding:10px}
+.zone-card h4{font-size:13px;font-weight:700;margin-bottom:8px;color:#fff}
+.rule-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;font-size:11px}
+.rule-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.rule-label{color:#ccc;flex:1}
+.rule-value{color:#888;font-size:10px;display:block}
+
+/* desktop: map + panel side by side */
+@media(min-width:860px){
+  #main{flex-direction:row}
+  #map{flex:1;min-width:0;min-height:0}
+  #info-panel{
+    width:290px;flex-shrink:0;
+    max-height:none;overflow-y:auto;
+    border-top:none;border-left:1px solid #333;
+    transition:none
+  }
+  #info-panel.collapsed{max-height:none;overflow-y:auto}
+  #panel-toggle{display:none}
+}
+
+/* ── legend ──────────────────────────────── */
+#legend{
+  position:absolute;bottom:60px;left:10px;
+  background:rgba(15,15,30,0.90);color:#e0e0e0;
+  padding:8px 11px;border-radius:8px;z-index:600;
+  font-size:11px;max-width:190px;min-width:120px;
+  border:1px solid #333
+}
+#legend-title{font-weight:700;font-size:12px;margin-bottom:6px;color:#90caf9}
+.leg-item{display:flex;align-items:center;gap:7px;margin:3px 0;line-height:1.3}
+.leg-dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.leg-rect{display:inline-block;width:14px;height:10px;border-radius:2px;flex-shrink:0}
+.leg-line{display:inline-block;width:18px;height:3px;border-radius:2px;flex-shrink:0}
+.leg-dash{display:inline-block;width:18px;height:0;border-top:2px dashed;flex-shrink:0}
+/* legend toggle */
+.leg-toggle{cursor:pointer;user-select:none}
+.leg-toggle:hover{opacity:.8}
+.leg-chk{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border:2px solid #90caf9;border-radius:3px;
+  flex-shrink:0;font-size:10px;color:#1a1a2e;transition:background .1s
+}
+.leg-chk.on{background:#90caf9}
+
+/* ── popups ──────────────────────────────── */
+.leaflet-popup-content{font-size:12px;line-height:1.5;min-width:130px}
+.popup-title{font-weight:700;font-size:13px;margin-bottom:4px}
+.popup-row{display:flex;justify-content:space-between;gap:8px}
+.popup-val{font-weight:600;color:#4fc3f7}
+.popup-pass{color:#81c784;font-weight:600}
+.popup-fail{color:#e57373;font-weight:600}
+
+/* ── loading ─────────────────────────────── */
+#loading{
+  position:fixed;inset:0;background:#1a1a2e;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#90caf9
+}
+#loading h2{font-size:16px}
+.spinner{width:40px;height:40px;border:3px solid #333;border-top-color:#90caf9;
+  border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Loading map data…</h2>
+  <p style="font-size:12px;color:#666">Serve via local HTTP server, e.g.:<br><code style="color:#90caf9">python -m http.server 8000</code></p>
+</div>
+
+<div id="app" style="display:none">
+  <div id="header">
+    <div id="title-row">
+      <span id="paper-title">Seven Rules to Evaluate Whether You Live in a Local Transport Area</span>
+      <span id="city-badge">Loading…</span>
+      <span id="phase-label"></span>
+    </div>
+    <nav id="step-bar">
+      <button class="step-btn phase-a" data-step="0">0 · Graph</button>
+      <button class="step-btn phase-a" data-step="1">1 · Polygons</button>
+      <button class="step-btn phase-a" data-step="2">2 · Feret Ø</button>
+      <button class="step-btn phase-a" data-step="3">3 · Shape</button>
+      <button class="step-btn phase-a" data-step="4">4 · Urban</button>
+      <button class="step-btn phase-b" data-step="5">5 · Roads</button>
+      <button class="step-btn phase-b" data-step="6">6 · Footways</button>
+      <button class="step-btn phase-b" data-step="7">7 · Parking</button>
+      <button class="step-btn phase-b" data-step="8">8 · Services</button>
+      <button class="step-btn phase-b" data-step="9">9 · Green</button>
+      <button class="step-btn phase-b summary" data-step="10">★ Summary</button>
+    </nav>
+  </div>
+
+  <div id="main">
+    <div id="map"></div>
+
+    <div id="info-panel">
+      <div id="panel-toggle">
+        <span id="step-num-label">Step 0</span>
+        <span id="panel-arrow">▲</span>
+      </div>
+      <div id="step-title-text"></div>
+      <div id="step-desc-text"></div>
+      <div id="step-stats-text"></div>
+    </div>
+  </div>
+</div>
+
+<div id="legend">
+  <div id="legend-title"></div>
+  <div id="legend-body"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════════════════════════════
+let MAP, DATA;
+let LAYERS = {};
+let CURRENT = 0;
+let POLY_VISIBLE = true;
+const PASS_COLOR = '#43a047', FAIL_COLOR = '#c62828';
+const PALETTE     = ['#1565c0','#6a1b9a','#2e7d32','#e65100','#006064'];
+let   ZONE_COLORS = {};
+let   PIDS        = [];
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  const params   = new URLSearchParams(window.location.search);
+  const dataFile = params.get('data') || 'caltagirone_data.json';
+  try {
+    const resp = await fetch(dataFile);
+    if (!resp.ok) throw new Error(resp.statusText);
+    DATA = await resp.json();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<p style="color:#ef9a9a;font-size:14px">&#9888; Cannot load ${dataFile}<br>
+       Run: <code>python -m http.server 8000</code><br>then open <code>http://localhost:8000/paper_map.html</code></p>`;
+    return;
+  }
+
+  PIDS = Object.keys(DATA.patterns);
+  PIDS.forEach((pid, i) => { ZONE_COLORS[pid] = PALETTE[i % PALETTE.length]; });
+
+  // Populate city badge and page title from JSON meta
+  const meta = DATA.meta || {};
+  document.getElementById('city-badge').textContent = meta.city_label || meta.city || '';
+  document.title = 'Seven Rules — Local Transport Areas | ' + (meta.city_label || meta.city || '');
+
+  // Show app BEFORE creating map — Leaflet needs rendered dimensions
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // Tiny delay ensures flex layout is painted before Leaflet reads container size
+  await new Promise(r => setTimeout(r, 30));
+
+  const centerLat = meta.center_lat || 0;
+  const centerLon = meta.center_lon || 0;
+  const zoom      = meta.zoom      || 13;
+  MAP = L.map('map', { zoomControl: false }).setView([centerLat, centerLon], zoom);
+  L.control.zoom({ position: 'topright' }).addTo(MAP);
+
+  const light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    { attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19 });
+  const dark  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    { attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19 });
+  const osm   = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution:'© OpenStreetMap', maxZoom:19 });
+  light.addTo(MAP);
+  L.control.layers({'Light (CartoDB)': light, 'Dark (CartoDB)': dark, 'OpenStreetMap': osm}, {}, { position:'topright' }).addTo(MAP);
+
+  document.querySelectorAll('.step-btn').forEach(btn =>
+    btn.addEventListener('click', () => goToStep(+btn.dataset.step)));
+
+  document.getElementById('panel-toggle').addEventListener('click', () => {
+    document.getElementById('info-panel').classList.toggle('collapsed');
+    setTimeout(() => MAP.invalidateSize(), 300);
+  });
+
+  MAP.invalidateSize();
+  goToStep(0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER HELPERS
+// ═══════════════════════════════════════════════════════════════
+function clearLayers() {
+  Object.values(LAYERS).forEach(l => { try { MAP.removeLayer(l); } catch(_) {} });
+  LAYERS = {};
+}
+
+function addL(key, layer) { LAYERS[key] = layer; layer.addTo(MAP); return layer; }
+
+function patternLayer(pid, opts = {}) {
+  const pat = DATA.patterns[pid];
+  const defaults = {
+    color: ZONE_COLORS[pid], weight: 2.5,
+    fillColor: ZONE_COLORS[pid], fillOpacity: 0.12,
+  };
+  return L.geoJSON({ type:'Feature', geometry: pat.geometry },
+    { style: { ...defaults, ...opts } });
+}
+
+function patternVerdict(pid, verdictPass, stepIdx) {
+  const pat = DATA.patterns[pid];
+  const rule = DATA.rules;
+  const val  = ((rule[pid] || {}).values || [])[stepIdx] || '';
+  const col  = verdictPass ? '#1b5e20' : '#7f0000';
+  const fill = verdictPass ? PASS_COLOR : FAIL_COLOR;
+  return L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+    style: { color: fill, weight: 3, fillColor: fill, fillOpacity: 0.15 }
+  }).bindPopup(`<div class="popup-title">${pat.short_label}</div>
+    <div>${verdictPass ? '✓' : '✗'} ${rule.labels[stepIdx]}</div>
+    <div style="margin-top:4px;color:#aaa;font-size:11px">${val}</div>`);
+}
+
+function bearingColor(b) {
+  return `hsl(${(b % 180) * 2},85%,50%)`;
+}
+
+function tooltip(html) { return html; }
+
+function onTap(layer, html) {
+  layer.bindPopup(html, { maxWidth: 260 });
+  layer.bindTooltip(html, { sticky: true, maxWidth: 260 });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEGEND & PANEL
+// ═══════════════════════════════════════════════════════════════
+function setLegend(title, html) {
+  document.getElementById('legend-title').textContent = title;
+  document.getElementById('legend-body').innerHTML   = html;
+}
+
+function setPanel(stepNum, phase, title, desc, statsHtml) {
+  const phaseEl = document.getElementById('phase-label');
+  phaseEl.textContent = phase;
+  phaseEl.style.color = phase.includes('A') ? '#90caf9' : '#ce93d8';
+  document.getElementById('step-num-label').textContent = `Step ${stepNum}`;
+  document.getElementById('step-title-text').textContent = title;
+  document.getElementById('step-desc-text').textContent  = desc;
+  document.getElementById('step-stats-text').innerHTML   = statsHtml;
+  document.getElementById('info-panel').classList.remove('collapsed');
+  document.querySelectorAll('.step-btn').forEach(b =>
+    b.classList.toggle('active', +b.dataset.step === stepNum));
+}
+
+function verdictHTML(pid, pass, detail) {
+  const pat = DATA.patterns[pid];
+  return `<div class="verdict-badge ${pass ? 'verdict-pass' : 'verdict-fail'}">
+    <span class="verdict-icon">${pass ? '✓' : '✗'}</span>
+    <span>${pat.short_label}<span class="verdict-detail">${detail}</span></span>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP ROUTER
+// ═══════════════════════════════════════════════════════════════
+function goToStep(n) {
+  clearLayers();
+  POLY_VISIBLE = true;
+  CURRENT = n;
+  [step0,step1,step2,step3,step4,step5,step6,step7,step8,step9,step10][n]();
+}
+
+function togglePolygons() {
+  POLY_VISIBLE = !POLY_VISIBLE;
+  const lay = LAYERS['cells'];
+  if (lay) { POLY_VISIBLE ? MAP.addLayer(lay) : MAP.removeLayer(lay); }
+  document.querySelectorAll('.leg-chk').forEach(b =>
+    b.classList.toggle('on', POLY_VISIBLE));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 0 — RAW ROAD GRAPH
+// ═══════════════════════════════════════════════════════════════
+function step0() {
+  const src = (DATA.all_roads && DATA.all_roads.features.length)
+    ? DATA.all_roads : DATA.roads;
+
+  addL('roads', L.geoJSON(src, {
+    style: f => {
+      const hw = (f.properties.highway || '').toLowerCase();
+      const w  = hw === 'primary' ? 2.0
+               : hw === 'secondary' ? 1.5
+               : hw === 'tertiary'  ? 1.2
+               : 0.8;
+      return { color:'#1565c0', weight:w, opacity:0.9 };
+    },
+    onEachFeature(f,l) {
+      const hw = f.properties.highway || '';
+      if (hw) l.bindTooltip(hw, { sticky:true });
+    }
+  }));
+
+  const total = src.features.length;
+  const label = (DATA.all_roads && DATA.all_roads.features.length)
+    ? 'All OSM road types' : 'Primary / secondary / tertiary';
+  setLegend('Step 0 — Road Graph', `
+    <div class="leg-item"><span class="leg-line" style="background:#1565c0"></span>${label} (${total})</div>`);
+
+  setPanel(0,'Phase A — Identification','Step 0 — Full Road Network',
+    'Complete OSM road graph for this city: residential streets, tracks, footways, service roads and more, at uniform visual weight. This is the raw input before any filtering. In Step 1 we restrict to primary, secondary and tertiary roads — the ones used to build the planar graph for polygonation.',
+    `<b>${total}</b> road segments (all types)`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 1 — ROAD NETWORK POLYGONATION
+// ═══════════════════════════════════════════════════════════════
+function step1() {
+  const ROAD_COLORS = { primary:'#c62828', secondary:'#e65100', tertiary:'#f9a825' };
+  const ROAD_W      = { primary:2.5, secondary:1.8, tertiary:1.2 };
+
+  // Cells: fill only (no border) — roads drawn on top will define the edges
+  const cellsLayer = L.geoJSON(DATA.cells, {
+    style: { fillColor:'#546e7a', color:'#546e7a', weight:0.5,
+             fillOpacity:0.35, opacity:0.3 },
+    onEachFeature(f,l) {
+      const p = f.properties;
+      l.bindTooltip(
+        `<b>Polygon</b><br>Max Ø: ${p.diameter_km} km<br>Area: ${p.area_km2} km²`,
+        { sticky:true });
+    }
+  });
+  addL('cells', cellsLayer);
+  MAP.removeLayer(cellsLayer);  // hidden by default — toggle to show
+  POLY_VISIBLE = false;
+
+  // Roads drawn AFTER cells → on top in SVG order
+  addL('roads', L.geoJSON(DATA.roads, {
+    style: f => {
+      const hw = (f.properties.highway || '').toLowerCase();
+      return {
+        color:   ROAD_COLORS[hw] || '#78909c',
+        weight:  ROAD_W[hw]      || 2.0,
+        opacity: 1.0
+      };
+    },
+    onEachFeature(f,l) {
+      const n  = f.properties.name || '';
+      const hw = f.properties.highway || '';
+      l.bindTooltip(`${n ? n + ' ' : ''}<i>(${hw})</i>`, { sticky:true });
+    }
+  }));
+
+  const tot = DATA.cells.stats.total;
+  setLegend('Step 1 — Polygons', `
+    <div class="leg-item leg-toggle" onclick="togglePolygons()">
+      <span class="leg-chk" id="poly-chk"></span>Road polygons (${tot})
+    </div>
+    <div class="leg-item"><span class="leg-line" style="background:#c62828"></span>Primary roads</div>
+    <div class="leg-item"><span class="leg-line" style="background:#e65100"></span>Secondary roads</div>
+    <div class="leg-item"><span class="leg-line" style="background:#f9a825"></span>Tertiary roads</div>`);
+
+  setPanel(1,'Phase A — Identification','Step 1 — Road Network Polygonation',
+    `The OSM road graph is planarized into ${tot} closed polygons (faces of the planar graph). These are the spatial units from which candidate Local Transport Areas will be filtered. Toggle the polygon layer with the checkbox in the legend.`,
+    `<b>${tot}</b> raw polygons extracted from road network graph`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 2 — FERET DIAMETER FILTER
+// ═══════════════════════════════════════════════════════════════
+function step2() {
+  const n2 = DATA.cells.stats.pass2, tot = DATA.cells.stats.total;
+
+  // Individual cells — grey/blue by pass2
+  addL('cells', L.geoJSON(DATA.cells, {
+    style: f => f.properties.pass2
+      ? { fillColor:'#1565c0', color:'#0d47a1', weight:2,   fillOpacity:0.6 }
+      : { fillColor:'#333',    color:'#555',    weight:0.4, fillOpacity:0.2 },
+    onEachFeature(f,l) {
+      const p = f.properties;
+      const ok = p.pass2;
+      l.bindTooltip(
+        `<b>Max Ø: ${p.diameter_km} km</b><br>`+
+        `<span class="${ok?'popup-pass':'popup-fail'}">${ok?'✓ Pass':'✗ Fail'}: 1.6–3.2 km</span>`,
+        { sticky:true });
+    }
+  }));
+
+  // All final candidates (both direct and aggregated) as orange dashed overlay
+  for (const pid of PIDS) {
+    const pat = DATA.patterns[pid];
+    addL('cand_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+      style: { fillColor:'#f57c00', color:'#e65100', weight:2.5, fillOpacity:0.40, dashArray:'6,3' }
+    }).bindTooltip(
+      `<b>${pat.short_label}</b><br>Ø ${pat.diameter_km} km ✓ passes filter`,
+      { sticky:true }));
+  }
+
+  setLegend('Step 2 — Feret Filter', `
+    <div class="leg-item"><span class="leg-rect" style="background:#1565c0"></span>Individual cell passes (${n2})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#f57c00;outline:2px dashed #e65100"></span>Final candidate zone (${PIDS.length})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${tot-n2})</div>`);
+
+  setPanel(2,'Phase A — Identification','Step 2 — Feret Diameter Filter (Rule 1)',
+    'Each road polygon is measured with the Feret diameter (max caliper distance). ' +
+    'Polygons between 1.6 and 3.2 km — Alexander\'s "1–2 miles" — are kept (blue). ' +
+    'Polygons outside this range are discarded (grey). ' +
+    'When no single polygon is large enough, adjacent small polygons are merged into a composite candidate and re-measured. ' +
+    'The orange dashed outlines show all final candidate zones, whether they passed individually or via aggregation.',
+    `<b>${n2}</b> of ${tot} individual cells pass · <b>${PIDS.length}</b> final candidate zone${PIDS.length!==1?'s':''}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 3 — SHAPE FILTER
+// ═══════════════════════════════════════════════════════════════
+function step3() {
+  const n2 = DATA.cells.stats.pass2, n3 = DATA.cells.stats.pass3;
+
+  addL('cells', L.geoJSON(DATA.cells, {
+    style: f => f.properties.pass3
+      ? { fillColor:'#2e7d32', color:'#1b5e20', weight:2.5, fillOpacity:0.65 }
+      : { fillColor:'#333',    color:'#555',    weight:0.4, fillOpacity:0.2 },
+    onEachFeature(f,l) {
+      const p = f.properties;
+      const sol_ok = p.solidity >= 0.65, fr_ok = p.feret_ratio >= 0.50;
+      if (!p.pass2 && !p.pass3) return;
+      l.bindTooltip(
+        `<b>Max Ø: ${p.diameter_km} km</b><br>`+
+        `<span class="${sol_ok?'popup-pass':'popup-fail'}">Solidity: ${p.solidity} ${sol_ok?'≥':'<'} 0.65</span><br>`+
+        `<span class="${fr_ok?'popup-pass':'popup-fail'}">Feret ratio: ${p.feret_ratio} ${fr_ok?'≥':'<'} 0.50</span>`,
+        { sticky:true });
+    }
+  }));
+
+  // All final candidates — same green as direct survivors
+  for (const pid of PIDS) {
+    const pat = DATA.patterns[pid];
+    addL('cand_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+      style: { fillColor:'#2e7d32', color:'#1b5e20', weight:2.5, fillOpacity:0.65 }
+    }).bindTooltip(
+      `<b>${pat.short_label}</b><br>sol=${pat.solidity} ✓ · fr=${pat.feret_ratio} ✓`,
+      { sticky:true }));
+  }
+
+  setLegend('Step 3 — Shape Filter', `
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Pass shape filters (${n3 + PIDS.length})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${DATA.cells.stats.total - n3})</div>`);
+
+  setPanel(3,'Phase A — Identification','Step 3 — Shape Filter (Rule 1)',
+    'Solidity ≥ 0.65 (compact, not overly concave) and Feret ratio ≥ 0.50 (not elongated). ' +
+    'Applied to both individual cells and composite aggregated zones on their merged geometry. ' +
+    'All survivors — direct or aggregated — appear in green.',
+    `<b>${n3 + PIDS.length}</b> candidates survive (${n3} direct · ${PIDS.length} aggregated)`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 4 — URBAN DENSITY FILTER → IDENTIFIED ZONES
+// ═══════════════════════════════════════════════════════════════
+function step4() {
+  // Background: all cells grayed out
+  addL('cells_bg', L.geoJSON(DATA.cells, {
+    style: { fillColor:'#222', color:'#444', weight:0.4, fillOpacity:0.3 }
+  }));
+
+  // Identified zones
+  for (const pid of PIDS) {
+    const pat = DATA.patterns[pid];
+    const layer = L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+      style: { fillColor:'#2e7d32', color:'#1b5e20', weight:3, fillOpacity:0.65 }
+    });
+    const content = `<div class="popup-title">${pat.label}</div>
+      <div class="popup-row"><span>Area</span><span class="popup-val">${pat.area_km2} km²</span></div>
+      <div class="popup-row"><span>Buildings</span><span class="popup-val">${pat.buildings}</span></div>
+      <div class="popup-row"><span>Density</span><span class="popup-val">${pat.density_km2} bldg/km²</span></div>
+      <div class="popup-row"><span>Coverage</span><span class="popup-val">${(pat.coverage*100).toFixed(0)}%</span></div>
+      <div class="popup-row"><span>Solidity</span><span class="popup-val">${pat.solidity}</span></div>
+      <div class="popup-row"><span>Feret ratio</span><span class="popup-val">${pat.feret_ratio}</span></div>`;
+    layer.bindPopup(content, {maxWidth:240});
+    layer.bindTooltip(`<b>${pat.short_label}</b> — click for details`, {sticky:true});
+    addL('zone_'+pid, layer);
+  }
+
+  setLegend('Step 4 — Urban Filter', `
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Identified zones (${PIDS.length})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#222;border:1px solid #444"></span>Filtered out</div>
+    <div style="margin-top:6px;font-size:10px;color:#aaa">Criteria:<br>≥250 bldg/km²<br>Coverage ≥80%</div>`);
+
+  setPanel(4,'Phase A — Identification','Step 4 — Urban Density Filter (Rule 2)',
+    'Apply urban density thresholds: ≥250 buildings/km² and building coverage ≥80%. Two areas pass all filters and are identified as candidate Local Transport Areas.',
+    PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[1], DATA.rules[pid].values[1])).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 5 — RULE 3: PARALLEL MAJOR ROADS
+// ═══════════════════════════════════════════════════════════════
+function step5() {
+  const RULE_IDX = 2;
+  for (const pid of PIDS) {
+    addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
+  }
+
+  for (const pid of PIDS) {
+    const st = DATA.streets[pid];
+
+    // Main streets: colored by bearing
+    if (st.main.features.length) {
+      addL('main_'+pid, L.geoJSON(st.main, {
+        style: f => ({ color: bearingColor(f.properties.bearing), weight:2.5, opacity:0.9 }),
+        onEachFeature(f,l) {
+          const p = f.properties;
+          l.bindTooltip(
+            `<b>${p.nome}</b><br>Bearing: <b>${p.bearing}°</b><br>`+
+            `<span class="${p.categoria==='parallela'?'popup-pass':'popup-fail'}">${p.categoria}</span>`,
+            { sticky:true });
+        }
+      }));
+    }
+
+    // Border streets: thin dashed
+    if (st.border.features.length) {
+      addL('border_'+pid, L.geoJSON(st.border, {
+        style: { color:'#78909c', weight:1.5, dashArray:'4,3', opacity:0.6 }
+      }));
+    }
+  }
+
+  setLegend('Step 5 — Road Parallelism', `
+    <div style="font-size:10px;color:#aaa;margin-bottom:4px">Road color = orientation</div>
+    <div style="display:flex;height:10px;border-radius:4px;overflow:hidden;margin-bottom:6px">
+      ${[0,20,40,60,80,100,120,140,160].map(b =>
+        `<div style="flex:1;background:${bearingColor(b)}"></div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:#aaa;margin-bottom:8px">
+      <span>0°N</span><span>90°E</span><span>180°S</span></div>
+    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
+
+  const s = DATA.streets;
+  setPanel(5,'Phase B — Evaluation','Step 5 — Rule 3: Parallel Major Roads',
+    'Criterion: ≥60% of major roads share the same orientation (±20° tolerance). A well-structured Local Transport Area has a dominant street direction.',
+    PIDS.map(pid => {
+      const sm = (s[pid] || {}).summary || {};
+      const detail = sm.dom_pct != null
+        ? `${sm.dom_pct}% dominant — ${sm.verdict}`
+        : DATA.rules[pid].values[RULE_IDX];
+      return verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX], detail);
+    }).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 6 — RULE 4: PEDESTRIAN PATHS
+// ═══════════════════════════════════════════════════════════════
+function step6() {
+  const RULE_IDX = 3;
+  for (const pid of PIDS) {
+    addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
+  }
+
+  for (const pid of PIDS) {
+    const fw = DATA.footways[pid];
+
+    if (fw.features.features.length) {
+      addL('fw_'+pid, L.geoJSON(fw.features, {
+        style: f => ({
+          color:   f.properties.oriented ? '#43a047' : '#c62828',
+          weight:  1.8,
+          opacity: 0.75
+        }),
+        onEachFeature(f,l) {
+          const p = f.properties;
+          l.bindTooltip(
+            `<span class="${p.oriented?'popup-pass':'popup-fail'}">`+
+            `${p.oriented?'✓ Toward':'✗ Away from'} centre</span>`+
+            `<br>Diff: ${p.diff}° (limit ±30°)`,
+            { sticky:true });
+        }
+      }));
+    }
+
+    // Centroid marker
+    const c = DATA.patterns[pid].centroid;
+    addL('cen_'+pid, L.circleMarker(c, {
+      radius:7, color:'#fff', fillColor:'#ffd54f', fillOpacity:0.9, weight:2
+    }).bindTooltip(`${DATA.patterns[pid].short_label} centroid`, {sticky:true}));
+  }
+
+  setLegend('Step 6 — Pedestrian Paths', `
+    <div class="leg-item"><span class="leg-line" style="background:#43a047"></span>Toward centre (±30°)</div>
+    <div class="leg-item"><span class="leg-line" style="background:#c62828"></span>Away from centre</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#ffd54f;border:2px solid #fff"></span>Zone centroid</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
+
+  const fw = DATA.footways;
+  setPanel(6,'Phase B — Evaluation','Step 6 — Rule 4: Pedestrian Paths Toward Centre',
+    'Criterion: ≥50% of pedestrian/cycling paths oriented toward the zone centroid (±30° angular tolerance). This indicates paths designed to facilitate movement toward the local centre.',
+    PIDS.map(pid => {
+      const f = fw[pid] || {};
+      const detail = f.n_total != null
+        ? `${f.n_total} paths, ${f.n_oriented} oriented (${f.pct_oriented}%)`
+        : DATA.rules[pid].values[RULE_IDX];
+      return verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX], detail);
+    }).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 7 — RULE 5: PARKING
+// ═══════════════════════════════════════════════════════════════
+function step7() {
+  const RULE_IDX = 4;
+  for (const pid of PIDS) {
+    addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
+  }
+
+  // 150m boundary buffers
+  for (const pid of PIDS) {
+    const buf = DATA.patterns[pid].boundary_buffer_150m;
+    if (buf) {
+      addL('buf_'+pid, L.geoJSON({ type:'Feature', geometry: buf }, {
+        style: { color:'#ffd600', weight:1.5, dashArray:'5,4', fillOpacity:0.06, fillColor:'#ffd600' }
+      }).bindTooltip('150m boundary buffer', {sticky:true}));
+    }
+  }
+
+  // Parking markers
+  DATA.parking.items.forEach((p, i) => {
+    const ok = p.near_boundary;
+    const m  = L.circleMarker([p.lat, p.lon], {
+      radius:7, color: ok ? '#43a047':'#c62828',
+      fillColor: ok ? '#43a047':'#c62828', fillOpacity:0.85, weight:2
+    });
+    m.bindTooltip(
+      `<b>P</b> ${p.name}<br>`+
+      `${ok?'<span class="popup-pass">✓ Within 150m</span>':'<span class="popup-fail">✗ Outside 150m</span>'}`+
+      `<br>Distance: ${p.dist_m}m`,
+      { sticky:true });
+    addL('pk_'+i, m);
+  });
+
+  const sm = DATA.parking.summary;
+  setLegend('Step 7 — Parking', `
+    <div class="leg-item"><span class="leg-dot" style="background:#43a047"></span>Within 150m boundary</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#c62828"></span>Outside buffer</div>
+    <div class="leg-item"><span class="leg-dash" style="border-color:#ffd600"></span>150m boundary buffer</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
+
+  setPanel(7,'Phase B — Evaluation','Step 7 — Rule 5: Parking Near Boundary',
+    'Criterion: ≥2 parking locations within 150m of the ring road boundary. Parking should be accessible from the perimeter, not placed inside the residential core.',
+    PIDS.map(pid => {
+      const p = sm[pid] || {};
+      const detail = p.total != null
+        ? `${p.near_boundary}/${p.total} parking within 150m`
+        : DATA.rules[pid].values[RULE_IDX];
+      return verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX], detail);
+    }).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 8 — RULE 6: SERVICES
+// ═══════════════════════════════════════════════════════════════
+function step8() {
+  const RULE_IDX = 5;
+  for (const pid of PIDS) {
+    addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
+  }
+
+  // Heatmap
+  const heat = DATA.services.items.map(s => [s.lat, s.lon, 0.6]);
+  addL('heat', L.heatLayer(heat, { radius:18, blur:15, maxZoom:17, minOpacity:0.3 }));
+
+  // Service markers by category
+  DATA.services.items.forEach((s, i) => {
+    const col = DATA.services.cat_colors[s.cat] || '#9e9e9e';
+    const m   = L.circleMarker([s.lat, s.lon], {
+      radius:4, color: col, fillColor: col, fillOpacity:0.8, weight:1
+    });
+    m.bindTooltip(
+      `<b>${s.name}</b><br>${DATA.services.cat_labels[s.cat]||s.cat}`,
+      { sticky:true });
+    addL('srv_'+i, m);
+  });
+
+  // Legend: categories
+  const catLeg = Object.entries(DATA.services.cat_colors).map(([cat, col]) => {
+    const n = DATA.services.items.filter(s => s.cat === cat).length;
+    return n ? `<div class="leg-item"><span class="leg-dot" style="background:${col}"></span>${DATA.services.cat_labels[cat]||cat} (${n})</div>` : '';
+  }).join('');
+
+  setLegend('Step 8 — Services', catLeg);
+
+  const sm = DATA.services.summary;
+  setPanel(8,'Phase B — Evaluation','Step 8 — Rule 6: Services Present & Distributed',
+    'Criterion: ≥5 service categories with ≥50 total services. A Local Transport Area must provide a complete set of daily services within walking distance.',
+    PIDS.map(pid => {
+      const p = sm[pid] || {};
+      const detail = p.total != null
+        ? `${p.total} services, ${p.n_cats} categories`
+        : DATA.rules[pid].values[RULE_IDX];
+      return verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX], detail);
+    }).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 9 — RULE 7: GREEN SPACES
+// ═══════════════════════════════════════════════════════════════
+function step9() {
+  const RULE_IDX = 6;
+  for (const pid of PIDS) {
+    addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
+  }
+
+  const GREEN_FILLS  = ['#4caf50','#26a69a','#81c784','#a5d6a7'];
+  const GREEN_STRS   = ['#1b5e20','#004d40','#2e7d32','#1b5e20'];
+  DATA.green.items.forEach((g, i) => {
+    const pid  = g.pid;
+    const pidI = PIDS.indexOf(pid);
+    const col  = GREEN_STRS[pidI >= 0 ? pidI : 0];
+    const fill = GREEN_FILLS[pidI >= 0 ? pidI : 0];
+
+    // 1.2km walking radius
+    addL('gr_'+i, L.circle([g.lat, g.lon], {
+      radius:1200, color: fill, weight:1, fillColor: fill, fillOpacity:0.04
+    }));
+
+    // Marker
+    const m = L.circleMarker([g.lat, g.lon], {
+      radius:7, color:'#fff', fillColor: fill, fillOpacity:0.85, weight:2
+    });
+    m.bindTooltip(
+      `<b>${g.name || 'Park'}</b><br>${g.type} — ${(g.area_m2/10000).toFixed(2)} ha`,
+      { sticky:true });
+    addL('gp_'+i, m);
+  });
+
+  const sm = DATA.green.summary;
+  setLegend('Step 9 — Green Spaces', `
+    ${PIDS.map((pid,i) => `<div class="leg-item"><span class="leg-dot" style="background:${GREEN_FILLS[i%GREEN_FILLS.length]};border:2px solid #fff"></span>Green space (${DATA.patterns[pid].short_label})</div>`).join('')}
+    <div class="leg-item"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;border:1px solid #4caf50;opacity:.5"></span>1.2 km walk radius</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
+
+  setPanel(9,'Phase B — Evaluation','Step 9 — Rule 7: Green Spaces',
+    'Criterion: ≥3 green spaces reachable within 15 min walking (~1.2 km). Green spaces must also be distributed across the zone, not concentrated in one corner.',
+    PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX],
+      (sm[pid] || {}).note || DATA.rules[pid].values[RULE_IDX])).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 10 — SUMMARY SCORECARD
+// ═══════════════════════════════════════════════════════════════
+function step10() {
+  const r = DATA.rules;
+
+  for (const pid of PIDS) {
+    const pat      = DATA.patterns[pid];
+    const verdicts = r[pid].verdicts;
+    const pass_n   = verdicts.filter(Boolean).length;
+    const overall  = pass_n >= 5;
+    const fill     = overall ? PASS_COLOR : FAIL_COLOR;
+
+    addL('zone_bg_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+      style: { fillColor: fill, color: fill, weight:3, fillOpacity:0.18 }
+    }));
+
+    // Popup: full rule breakdown
+    const rows = r.labels.map((lbl, i) => {
+      const ok  = verdicts[i];
+      const val = r[pid].values[i];
+      return `<div class="rule-row">
+        <span class="rule-icon">${ok?'✅':'❌'}</span>
+        <span class="rule-label">${lbl}<span class="rule-value">${val}</span></span>
+      </div>`;
+    }).join('');
+
+    const popup = `<div class="popup-title">${pat.label}</div>
+      <div style="font-size:12px;margin-bottom:6px">Score: <b>${pass_n}/${r.labels.length}</b> rules passed</div>
+      ${rows}`;
+
+    const layer = L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
+      style: { fillColor: fill, color: fill, weight:3, fillOpacity:0.18 }
+    });
+    layer.bindPopup(popup, { maxWidth:280 });
+    layer.bindTooltip(`<b>${pat.short_label}</b> — click for full scorecard`, {sticky:true});
+    addL('zone_'+pid, layer);
+  }
+
+  // Legend: both zone icons
+  setLegend('Step 10 — Results', `
+    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes (≥5/7 rules)</div>
+    <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails (&lt;5/7 rules)</div>`);
+
+  // Rule matrix in panel
+  const buildCard = (pid) => {
+    const verdicts = r[pid].verdicts;
+    const pat = DATA.patterns[pid];
+    const rows = r.labels.map((lbl, i) =>
+      `<div class="rule-row">
+        <span class="rule-icon">${verdicts[i]?'✅':'❌'}</span>
+        <span class="rule-label">${lbl}
+          <span class="rule-value">${r[pid].values[i]}</span>
+        </span>
+      </div>`).join('');
+    return `<div class="zone-card">
+      <h4>${pat.label}</h4>${rows}
+    </div>`;
+  };
+
+  setPanel(10,'Phase B — Evaluation','Step 10 — Results Summary',
+    'Full evaluation of both candidate zones across all 7 rules. Click on a zone for the complete breakdown.',
+    `<div class="rule-matrix">${PIDS.map(buildCard).join('')}</div>`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
