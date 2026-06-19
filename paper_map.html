@@ -475,10 +475,10 @@ function step1() {
 function step2() {
   const n2 = DATA.cells.stats.pass2, tot = DATA.cells.stats.total;
 
-  // Individual cells — grey/blue by pass2
+  // Individual cells — green if pass2, grey otherwise
   addL('cells', L.geoJSON(DATA.cells, {
     style: f => f.properties.pass2
-      ? { fillColor:'#1565c0', color:'#0d47a1', weight:2,   fillOpacity:0.6 }
+      ? { fillColor:'#2e7d32', color:'#1b5e20', weight:2,   fillOpacity:0.65 }
       : { fillColor:'#333',    color:'#555',    weight:0.4, fillOpacity:0.2 },
     onEachFeature(f,l) {
       const p = f.properties;
@@ -490,27 +490,26 @@ function step2() {
     }
   }));
 
-  // All final candidates (both direct and aggregated) as orange dashed overlay
+  // Aggregated candidates — same green, dashed border
   for (const pid of PIDS) {
     const pat = DATA.patterns[pid];
     addL('cand_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
-      style: { fillColor:'#f57c00', color:'#e65100', weight:2.5, fillOpacity:0.40, dashArray:'6,3' }
+      style: { fillColor:'#2e7d32', color:'#1b5e20', weight:2.5, fillOpacity:0.65, dashArray:'6,3' }
     }).bindTooltip(
       `<b>${pat.short_label}</b><br>Ø ${pat.diameter_km} km ✓ passes filter`,
       { sticky:true }));
   }
 
   setLegend('Step 2 — Feret Filter', `
-    <div class="leg-item"><span class="leg-rect" style="background:#1565c0"></span>Individual cell passes (${n2})</div>
-    <div class="leg-item"><span class="leg-rect" style="background:#f57c00;outline:2px dashed #e65100"></span>Final candidate zone (${PIDS.length})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Pass Ø 1.6–3.2 km — direct (${n2})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32;outline:2px dashed #1b5e20"></span>Pass — aggregated (${PIDS.length})</div>
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${tot-n2})</div>`);
 
   setPanel(2,'Phase A — Identification','Step 2 — Feret Diameter Filter (Rule 1)',
     'Each road polygon is measured with the Feret diameter (max caliper distance). ' +
-    'Polygons between 1.6 and 3.2 km — Alexander\'s "1–2 miles" — are kept (blue). ' +
-    'Polygons outside this range are discarded (grey). ' +
+    'Polygons between 1.6 and 3.2 km — Alexander\'s "1–2 miles" — are kept. ' +
     'When no single polygon is large enough, adjacent small polygons are merged into a composite candidate and re-measured. ' +
-    'The orange dashed outlines show all final candidate zones, whether they passed individually or via aggregation.',
+    'Direct survivors have solid borders; aggregated candidates have dashed borders.',
     `<b>${n2}</b> of ${tot} individual cells pass · <b>${PIDS.length}</b> final candidate zone${PIDS.length!==1?'s':''}`);
 }
 
