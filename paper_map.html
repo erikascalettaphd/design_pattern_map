@@ -200,6 +200,19 @@ let   ZONE_COLORS = {};
 let   PIDS        = [];
 let   SRV_CATS    = {};
 let   SRV_VIS     = {};
+let   GREEN_BUFS_VISIBLE = false;
+let   GREEN_CLICKED      = new Set();
+
+function toggleGreenBuffers() {
+  GREEN_BUFS_VISIBLE = !GREEN_BUFS_VISIBLE;
+  Object.keys(LAYERS).filter(k => k.startsWith('gr_')).forEach(key => {
+    const lay = LAYERS[key];
+    if (!lay) return;
+    GREEN_BUFS_VISIBLE ? MAP.addLayer(lay) : MAP.removeLayer(lay);
+  });
+  const chk = document.getElementById('green-buf-chk');
+  if (chk) chk.classList.toggle('on', GREEN_BUFS_VISIBLE);
+}
 
 const SRV_ORDER = ['food','retail','health','education','public_services',
                    'finance','religion','culture','sport','accommodation','green_space','other'];
@@ -826,31 +839,48 @@ function step9() {
 
   const GREEN_FILLS  = ['#4caf50','#26a69a','#81c784','#a5d6a7'];
   const GREEN_STRS   = ['#1b5e20','#004d40','#2e7d32','#1b5e20'];
+
+  // Reset state on each entry
+  GREEN_BUFS_VISIBLE = false;
+  GREEN_CLICKED      = new Set();
+
   DATA.green.items.forEach((g, i) => {
     const pid  = g.pid;
     const pidI = PIDS.indexOf(pid);
     const col  = GREEN_STRS[pidI >= 0 ? pidI : 0];
     const fill = GREEN_FILLS[pidI >= 0 ? pidI : 0];
 
-    // 1.2km walking radius
-    addL('gr_'+i, L.circle([g.lat, g.lon], {
-      radius:1200, color: fill, weight:1, fillColor: fill, fillOpacity:0.04
-    }));
+    // 1.2km buffer — stored in LAYERS but NOT added to map
+    LAYERS['gr_'+i] = L.circle([g.lat, g.lon], {
+      radius:1200, color:col, weight:1.5, fillColor:fill, fillOpacity:0.07
+    });
 
-    // Marker
+    // Marker with hover/click to reveal buffer
     const m = L.circleMarker([g.lat, g.lon], {
-      radius:7, color:'#fff', fillColor: fill, fillOpacity:0.85, weight:2
+      radius:7, color:'#fff', fillColor:fill, fillOpacity:0.85, weight:2
     });
     m.bindTooltip(
-      `<b>${g.name || 'Park'}</b><br>${g.type} — ${(g.area_m2/10000).toFixed(2)} ha`,
+      `<b>${g.name || 'Park'}</b><br>${g.type} — ${(g.area_m2/10000).toFixed(2)} ha<br><i>Click to pin buffer</i>`,
       { sticky:true });
+    m.on('mouseover', () => { if (!GREEN_BUFS_VISIBLE && !GREEN_CLICKED.has(i)) MAP.addLayer(LAYERS['gr_'+i]); });
+    m.on('mouseout',  () => { if (!GREEN_BUFS_VISIBLE && !GREEN_CLICKED.has(i)) MAP.removeLayer(LAYERS['gr_'+i]); });
+    m.on('click',     () => {
+      if (GREEN_CLICKED.has(i)) {
+        GREEN_CLICKED.delete(i);
+        if (!GREEN_BUFS_VISIBLE) MAP.removeLayer(LAYERS['gr_'+i]);
+      } else {
+        GREEN_CLICKED.add(i);
+        MAP.addLayer(LAYERS['gr_'+i]);
+      }
+    });
     addL('gp_'+i, m);
   });
 
   const sm = DATA.green.summary;
   setLegend('Step 9 — Green Spaces', `
     ${PIDS.map((pid,i) => `<div class="leg-item"><span class="leg-dot" style="background:${GREEN_FILLS[i%GREEN_FILLS.length]};border:2px solid #fff"></span>Green space (${DATA.patterns[pid].short_label})</div>`).join('')}
-    <div class="leg-item"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;border:1px solid #4caf50;opacity:.5"></span>1.2 km walk radius</div>
+    <div class="leg-item leg-toggle" onclick="toggleGreenBuffers()" style="margin-top:5px">
+      <span class="leg-chk" id="green-buf-chk"></span>Show all 1.2 km buffers</div>
     <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
