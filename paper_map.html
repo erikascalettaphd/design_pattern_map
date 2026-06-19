@@ -370,6 +370,13 @@ function setPanel(stepNum, phase, title, desc, statsHtml) {
     b.classList.toggle('active', +b.dataset.step === stepNum));
 }
 
+function noPatterns(stepNum, phase, title) {
+  setLegend(title, `<div class="leg-item" style="color:#aaa;font-style:italic">No patterns identified</div>`);
+  setPanel(stepNum, phase, title,
+    'No candidate zones survived the filtering pipeline (Steps 1–4) for this city.',
+    `<span style="color:#ef9a9a">✗ No patterns found — algorithm result: city does not contain a qualifying Local Transport Area.</span>`);
+}
+
 function verdictHTML(pid, pass, detail) {
   const pat = DATA.patterns[pid];
   return `<div class="verdict-badge ${pass ? 'verdict-pass' : 'verdict-fail'}">
@@ -573,6 +580,7 @@ function step3() {
 // STEP 4 — URBAN DENSITY FILTER → IDENTIFIED ZONES
 // ═══════════════════════════════════════════════════════════════
 function step4() {
+  if (PIDS.length === 0) return noPatterns(4,'Phase A — Identification','Step 4 — Urban Density Filter');
   // Background: all cells grayed out
   addL('cells_bg', L.geoJSON(DATA.cells, {
     style: { fillColor:'#222', color:'#444', weight:0.4, fillOpacity:0.3 }
@@ -610,6 +618,7 @@ function step4() {
 // STEP 5 — RULE 3: PARALLEL MAJOR ROADS
 // ═══════════════════════════════════════════════════════════════
 function step5() {
+  if (PIDS.length === 0) return noPatterns(5,'Phase B — Evaluation','Step 5 — Rule 3: Parallel Roads');
   const RULE_IDX = 2;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -667,6 +676,7 @@ function step5() {
 // STEP 6 — RULE 4: PEDESTRIAN PATHS
 // ═══════════════════════════════════════════════════════════════
 function step6() {
+  if (PIDS.length === 0) return noPatterns(6,'Phase B — Evaluation','Step 6 — Rule 4: Pedestrian Paths');
   const RULE_IDX = 3;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -723,6 +733,7 @@ function step6() {
 // STEP 7 — RULE 5: PARKING
 // ═══════════════════════════════════════════════════════════════
 function step7() {
+  if (PIDS.length === 0) return noPatterns(7,'Phase B — Evaluation','Step 7 — Rule 5: Parking');
   const RULE_IDX = 4;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -776,6 +787,7 @@ function step7() {
 // STEP 8 — RULE 6: SERVICES
 // ═══════════════════════════════════════════════════════════════
 function step8() {
+  if (PIDS.length === 0) return noPatterns(8,'Phase B — Evaluation','Step 8 — Rule 6: Services');
   const RULE_IDX = 5;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -832,6 +844,7 @@ function step8() {
 // STEP 9 — RULE 7: GREEN SPACES
 // ═══════════════════════════════════════════════════════════════
 function step9() {
+  if (PIDS.length === 0) return noPatterns(9,'Phase B — Evaluation','Step 9 — Rule 7: Green Spaces');
   const RULE_IDX = 6;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -894,6 +907,7 @@ function step9() {
 // STEP 10 — SUMMARY SCORECARD
 // ═══════════════════════════════════════════════════════════════
 function step10() {
+  if (PIDS.length === 0) return noPatterns(10,'Phase B — Evaluation','★ Summary');
   const r = DATA.rules;
 
   for (const pid of PIDS) {
