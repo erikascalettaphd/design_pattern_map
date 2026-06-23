@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Seven Rules — Local Transport Areas</title>
+<title>Seven Rules - Local Transport Areas</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -13,7 +13,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 #app{display:flex;flex-direction:column;height:100vh}
 #header{flex-shrink:0;background:#1a1a2e;border-bottom:1px solid #333}
 #title-row{display:flex;align-items:center;gap:12px;padding:8px 14px 4px;flex-wrap:wrap}
-#paper-title{font-size:13px;font-weight:600;color:#e0e0e0;flex:1;min-width:160px}
+#paper-title{font-size:15px;font-weight:600;color:#e0e0e0;min-width:0}
 #city-badge{font-size:11px;color:#90caf9;background:#1e3a5f;padding:2px 8px;border-radius:10px;white-space:nowrap}
 #phase-label{font-size:11px;color:#aaa;white-space:nowrap}
 
@@ -36,7 +36,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 #main{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 #map{flex:1;min-height:0;z-index:1}
 
-/* ── info panel — mobile: slides from bottom ── */
+/* ── info panel - mobile: slides from bottom ── */
 #info-panel{
   flex-shrink:0;
   background:rgba(15,15,30,0.95);color:#e0e0e0;
@@ -53,29 +53,29 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 #panel-toggle span{font-size:12px;color:#90caf9;font-weight:600}
 #panel-arrow{font-size:14px;color:#90caf9;transition:transform .2s}
 .collapsed #panel-arrow{transform:rotate(180deg)}
-#step-title-text{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
-#step-desc-text{font-size:12px;color:#aaa;line-height:1.5;margin-bottom:8px}
-#step-stats-text{font-size:12px;line-height:1.6}
+#step-title-text{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+#step-desc-text{font-size:13px;color:#aaa;line-height:1.5;margin-bottom:8px}
+#step-stats-text{font-size:13px;line-height:1.6}
 
 /* verdicts row */
 .verdict-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 .verdict-badge{
   display:flex;align-items:center;gap:6px;padding:5px 10px;
-  border-radius:6px;font-size:12px;font-weight:600;flex:1;min-width:130px
+  border-radius:6px;font-size:13px;font-weight:600;flex:1;min-width:130px
 }
 .verdict-pass{background:#1b5e20;color:#a5d6a7}
 .verdict-fail{background:#b71c1c;color:#ef9a9a}
 .verdict-icon{font-size:16px}
-.verdict-detail{font-size:11px;font-weight:400;opacity:.85;display:block}
+.verdict-detail{font-size:12px;font-weight:400;opacity:.85;display:block}
 
 /* rule matrix (step 10) */
 .rule-matrix{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
 .zone-card{flex:1;min-width:180px;background:#0d1b2a;border-radius:8px;padding:10px}
 .zone-card h4{font-size:13px;font-weight:700;margin-bottom:8px;color:#fff}
-.rule-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;font-size:11px}
-.rule-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.rule-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;font-size:12px}
+.rule-icon{font-size:14px;flex-shrink:0;margin-top:1px}
 .rule-label{color:#ccc;flex:1}
-.rule-value{color:#888;font-size:10px;display:block}
+.rule-value{color:#888;font-size:11px;display:block}
 
 /* desktop: map + panel side by side */
 @media(min-width:860px){
@@ -95,12 +95,12 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 #legend{
   position:absolute;bottom:60px;left:10px;
   background:rgba(15,15,30,0.90);color:#e0e0e0;
-  padding:8px 11px;border-radius:8px;z-index:600;
-  font-size:11px;max-width:190px;min-width:120px;
+  padding:11px 14px;border-radius:8px;z-index:600;
+  font-size:13px;max-width:230px;min-width:140px;
   border:1px solid #333
 }
-#legend-title{font-weight:700;font-size:12px;margin-bottom:6px;color:#90caf9}
-.leg-item{display:flex;align-items:center;gap:7px;margin:3px 0;line-height:1.3}
+#legend-title{font-weight:700;font-size:14px;margin-bottom:8px;color:#90caf9}
+.leg-item{display:flex;align-items:center;gap:8px;margin:4px 0;line-height:1.4}
 .leg-dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .leg-rect{display:inline-block;width:14px;height:10px;border-radius:2px;flex-shrink:0}
 .leg-line{display:inline-block;width:18px;height:3px;border-radius:2px;flex-shrink:0}
@@ -144,8 +144,10 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 <div id="app" style="display:none">
   <div id="header">
     <div id="title-row">
-      <span id="paper-title">Seven Rules to Evaluate Whether You Live in a Local Transport Area</span>
-      <span id="city-badge">Loading…</span>
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap">
+        <span id="paper-title">Seven Rules to Evaluate Whether You Live in a Local Transport Area</span>
+        <span id="city-badge">Loading…</span>
+      </div>
       <span id="phase-label"></span>
     </div>
     <nav id="step-bar">
@@ -280,9 +282,9 @@ async function init() {
   // Populate city badge and page title from JSON meta
   const meta = DATA.meta || {};
   document.getElementById('city-badge').textContent = meta.city_label || meta.city || '';
-  document.title = 'Seven Rules — Local Transport Areas | ' + (meta.city_label || meta.city || '');
+  document.title = 'Seven Rules - Local Transport Areas | ' + (meta.city_label || meta.city || '');
 
-  // Show app BEFORE creating map — Leaflet needs rendered dimensions
+  // Show app BEFORE creating map - Leaflet needs rendered dimensions
   document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
 
@@ -385,7 +387,7 @@ function noPatterns(stepNum, phase, title) {
   setLegend(title, `<div class="leg-item" style="color:#aaa;font-style:italic">No patterns identified</div>`);
   setPanel(stepNum, phase, title,
     'No candidate zones survived the filtering pipeline (Steps 1–4) for this city.',
-    `<span style="color:#ef9a9a">✗ No patterns found — algorithm result: city does not contain a qualifying Local Transport Area.</span>`);
+    `<span style="color:#ef9a9a">✗ No patterns found - algorithm result: city does not contain a qualifying Local Transport Area.</span>`);
 }
 
 function verdictHTML(pid, pass, detail) {
@@ -415,7 +417,7 @@ function togglePolygons() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 0 — RAW ROAD GRAPH
+// STEP 0 - RAW ROAD GRAPH
 // ═══════════════════════════════════════════════════════════════
 function step0() {
   const src = (DATA.all_roads && DATA.all_roads.features.length)
@@ -439,22 +441,22 @@ function step0() {
   const total = src.features.length;
   const label = (DATA.all_roads && DATA.all_roads.features.length)
     ? 'All OSM road types' : 'Primary / secondary / tertiary';
-  setLegend('Step 0 — Road Graph', `
+  setLegend('Step 0 - Road Graph', `
     <div class="leg-item"><span class="leg-line" style="background:#1565c0"></span>${label} (${total})</div>`);
 
-  setPanel(0,'Phase A — Identification','Step 0 — Full Road Network',
-    'Complete OSM road graph for this city: residential streets, tracks, footways, service roads and more, at uniform visual weight. This is the raw input before any filtering. In Step 1 we restrict to primary, secondary and tertiary roads — the ones used to build the planar graph for polygonation.',
+  setPanel(0,'Phase A - Identification','Step 0 - Full Road Network',
+    'Complete OSM road graph for this city: residential streets, tracks, footways, service roads and more, at uniform visual weight. This is the raw input before any filtering. In Step 1 we restrict to primary, secondary and tertiary roads - the ones used to build the planar graph for polygonation.',
     `<b>${total}</b> road segments (all types)`);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 1 — ROAD NETWORK POLYGONATION
+// STEP 1 - ROAD NETWORK POLYGONATION
 // ═══════════════════════════════════════════════════════════════
 function step1() {
   const ROAD_COLORS = { primary:'#c62828', secondary:'#e65100', tertiary:'#f9a825' };
   const ROAD_W      = { primary:2.5, secondary:1.8, tertiary:1.2 };
 
-  // Cells: fill only (no border) — roads drawn on top will define the edges
+  // Cells: fill only (no border) - roads drawn on top will define the edges
   const cellsLayer = L.geoJSON(DATA.cells, {
     style: { fillColor:'#546e7a', color:'#546e7a', weight:0.5,
              fillOpacity:0.35, opacity:0.3 },
@@ -466,7 +468,7 @@ function step1() {
     }
   });
   addL('cells', cellsLayer);
-  MAP.removeLayer(cellsLayer);  // hidden by default — toggle to show
+  MAP.removeLayer(cellsLayer);  // hidden by default - toggle to show
   POLY_VISIBLE = false;
 
   // Roads drawn AFTER cells → on top in SVG order
@@ -487,7 +489,7 @@ function step1() {
   }));
 
   const tot = DATA.cells.stats.total;
-  setLegend('Step 1 — Polygons', `
+  setLegend('Step 1 - Polygons', `
     <div class="leg-item leg-toggle" onclick="togglePolygons()">
       <span class="leg-chk" id="poly-chk"></span>Road polygons (${tot})
     </div>
@@ -495,18 +497,18 @@ function step1() {
     <div class="leg-item"><span class="leg-line" style="background:#e65100"></span>Secondary roads</div>
     <div class="leg-item"><span class="leg-line" style="background:#f9a825"></span>Tertiary roads</div>`);
 
-  setPanel(1,'Phase A — Identification','Step 1 — Road Network Polygonation',
+  setPanel(1,'Phase A - Identification','Step 1 - Road Network Polygonation',
     `The OSM road graph is planarized into ${tot} closed polygons (faces of the planar graph). These are the spatial units from which candidate Local Transport Areas will be filtered. Toggle the polygon layer with the checkbox in the legend.`,
     `<b>${tot}</b> raw polygons extracted from road network graph`);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 2 — FERET DIAMETER FILTER
+// STEP 2 - FERET DIAMETER FILTER
 // ═══════════════════════════════════════════════════════════════
 function step2() {
   const n2 = DATA.cells.stats.pass2, tot = DATA.cells.stats.total;
 
-  // Individual cells — green if pass2, grey otherwise
+  // Individual cells - green if pass2, grey otherwise
   addL('cells', L.geoJSON(DATA.cells, {
     style: f => f.properties.pass2
       ? { fillColor:'#2e7d32', color:'#1b5e20', weight:2,   fillOpacity:0.65 }
@@ -521,7 +523,7 @@ function step2() {
     }
   }));
 
-  // Aggregated candidates — same green, dashed border
+  // Aggregated candidates - same green, dashed border
   for (const pid of PIDS) {
     const pat = DATA.patterns[pid];
     addL('cand_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
@@ -531,21 +533,21 @@ function step2() {
       { sticky:true }));
   }
 
-  setLegend('Step 2 — Feret Filter', `
-    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Pass Ø 1.6–3.2 km — direct (${n2})</div>
-    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32;outline:2px dashed #1b5e20"></span>Pass — aggregated (${PIDS.length})</div>
+  setLegend('Step 2 - Feret Filter', `
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Pass Ø 1.6–3.2 km - direct (${n2})</div>
+    <div class="leg-item"><span class="leg-rect" style="background:#2e7d32;outline:2px dashed #1b5e20"></span>Pass - aggregated (${PIDS.length})</div>
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${tot-n2})</div>`);
 
-  setPanel(2,'Phase A — Identification','Step 2 — Feret Diameter Filter (Rule 1)',
+  setPanel(2,'Phase A - Identification','Step 2 - Feret Diameter Filter (Rule 1)',
     'Each road polygon is measured with the Feret diameter (max caliper distance). ' +
-    'Polygons between 1.6 and 3.2 km — Alexander\'s "1–2 miles" — are kept. ' +
+    'Polygons between 1.6 and 3.2 km - Alexander\'s "1–2 miles" - are kept. ' +
     'When no single polygon is large enough, adjacent small polygons are merged into a composite candidate and re-measured. ' +
     'Direct survivors have solid borders; aggregated candidates have dashed borders.',
     `<b>${n2}</b> of ${tot} individual cells pass · <b>${PIDS.length}</b> final candidate zone${PIDS.length!==1?'s':''}`);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 3 — SHAPE FILTER
+// STEP 3 - SHAPE FILTER
 // ═══════════════════════════════════════════════════════════════
 function step3() {
   const n2 = DATA.cells.stats.pass2, n3 = DATA.cells.stats.pass3;
@@ -566,7 +568,7 @@ function step3() {
     }
   }));
 
-  // All final candidates — same green as direct survivors
+  // All final candidates - same green as direct survivors
   for (const pid of PIDS) {
     const pat = DATA.patterns[pid];
     addL('cand_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
@@ -576,22 +578,22 @@ function step3() {
       { sticky:true }));
   }
 
-  setLegend('Step 3 — Shape Filter', `
+  setLegend('Step 3 - Shape Filter', `
     <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Pass shape filters (${n3 + PIDS.length})</div>
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${DATA.cells.stats.total - n3})</div>`);
 
-  setPanel(3,'Phase A — Identification','Step 3 — Shape Filter (Rule 1)',
+  setPanel(3,'Phase A - Identification','Step 3 - Shape Filter (Rule 1)',
     'Solidity ≥ 0.65 (compact, not overly concave) and Feret ratio ≥ 0.50 (not elongated). ' +
     'Applied to both individual cells and composite aggregated zones on their merged geometry. ' +
-    'All survivors — direct or aggregated — appear in green.',
+    'All survivors - direct or aggregated - appear in green.',
     `<b>${n3 + PIDS.length}</b> candidates survive (${n3} direct · ${PIDS.length} aggregated)`);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 4 — URBAN DENSITY FILTER → IDENTIFIED ZONES
+// STEP 4 - URBAN DENSITY FILTER → IDENTIFIED ZONES
 // ═══════════════════════════════════════════════════════════════
 function step4() {
-  if (PIDS.length === 0) return noPatterns(4,'Phase A — Identification','Step 4 — Urban Density Filter');
+  if (PIDS.length === 0) return noPatterns(4,'Phase A - Identification','Step 4 - Urban Density Filter');
   // Background: all cells grayed out
   addL('cells_bg', L.geoJSON(DATA.cells, {
     style: { fillColor:'#222', color:'#444', weight:0.4, fillOpacity:0.3 }
@@ -611,25 +613,25 @@ function step4() {
       <div class="popup-row"><span>Solidity</span><span class="popup-val">${pat.solidity}</span></div>
       <div class="popup-row"><span>Feret ratio</span><span class="popup-val">${pat.feret_ratio}</span></div>`;
     layer.bindPopup(content, {maxWidth:240});
-    layer.bindTooltip(`<b>${pat.short_label}</b> — click for details`, {sticky:true});
+    layer.bindTooltip(`<b>${pat.short_label}</b> - click for details`, {sticky:true});
     addL('zone_'+pid, layer);
   }
 
-  setLegend('Step 4 — Urban Filter', `
+  setLegend('Step 4 - Urban Filter', `
     <div class="leg-item"><span class="leg-rect" style="background:#2e7d32"></span>Identified zones (${PIDS.length})</div>
     <div class="leg-item"><span class="leg-rect" style="background:#222;border:1px solid #444"></span>Filtered out</div>
     <div style="margin-top:6px;font-size:10px;color:#aaa">Criteria:<br>≥250 bldg/km²<br>Coverage ≥80%</div>`);
 
-  setPanel(4,'Phase A — Identification','Step 4 — Urban Density Filter (Rule 2)',
+  setPanel(4,'Phase A - Identification','Step 4 - Urban Density Filter (Rule 2)',
     'Apply urban density thresholds: ≥250 buildings/km² and building coverage ≥80%. Two areas pass all filters and are identified as candidate Local Transport Areas.',
     PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[1], DATA.rules[pid].values[1])).join(''));
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 5 — RULE 3: PARALLEL MAJOR ROADS
+// STEP 5 - RULE 3: PARALLEL MAJOR ROADS
 // ═══════════════════════════════════════════════════════════════
 function step5() {
-  if (PIDS.length === 0) return noPatterns(5,'Phase B — Evaluation','Step 5 — Rule 3: Parallel Roads');
+  if (PIDS.length === 0) return noPatterns(5,'Phase B - Evaluation','Step 5 - Rule 3: Parallel Roads');
   const RULE_IDX = 2;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -660,7 +662,7 @@ function step5() {
     }
   }
 
-  setLegend('Step 5 — Road Parallelism', `
+  setLegend('Step 5 - Road Parallelism', `
     <div style="font-size:10px;color:#aaa;margin-bottom:4px">Road color = orientation</div>
     <div style="display:flex;height:10px;border-radius:4px;overflow:hidden;margin-bottom:6px">
       ${[0,20,40,60,80,100,120,140,160].map(b =>
@@ -672,22 +674,22 @@ function step5() {
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
   const s = DATA.streets;
-  setPanel(5,'Phase B — Evaluation','Step 5 — Rule 3: Parallel Major Roads',
+  setPanel(5,'Phase B - Evaluation','Step 5 - Rule 3: Parallel Major Roads',
     'Criterion: ≥60% of major roads share the same orientation (±20° tolerance). A well-structured Local Transport Area has a dominant street direction.',
     PIDS.map(pid => {
       const sm = (s[pid] || {}).summary || {};
       const detail = sm.dom_pct != null
-        ? `${sm.dom_pct}% dominant — ${sm.verdict}`
+        ? `${sm.dom_pct}% dominant - ${sm.verdict}`
         : DATA.rules[pid].values[RULE_IDX];
       return verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX], detail);
     }).join(''));
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 6 — RULE 4: PEDESTRIAN PATHS
+// STEP 6 - RULE 4: PEDESTRIAN PATHS
 // ═══════════════════════════════════════════════════════════════
 function step6() {
-  if (PIDS.length === 0) return noPatterns(6,'Phase B — Evaluation','Step 6 — Rule 4: Pedestrian Paths');
+  if (PIDS.length === 0) return noPatterns(6,'Phase B - Evaluation','Step 6 - Rule 4: Pedestrian Paths');
   const RULE_IDX = 3;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -721,7 +723,7 @@ function step6() {
     }).bindTooltip(`${DATA.patterns[pid].short_label} centroid`, {sticky:true}));
   }
 
-  setLegend('Step 6 — Pedestrian Paths', `
+  setLegend('Step 6 - Pedestrian Paths', `
     <div class="leg-item"><span class="leg-line" style="background:#43a047"></span>Toward centre (±30°)</div>
     <div class="leg-item"><span class="leg-line" style="background:#c62828"></span>Away from centre</div>
     <div class="leg-item"><span class="leg-dot" style="background:#ffd54f;border:2px solid #fff"></span>Zone centroid</div>
@@ -729,7 +731,7 @@ function step6() {
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
   const fw = DATA.footways;
-  setPanel(6,'Phase B — Evaluation','Step 6 — Rule 4: Pedestrian Paths Toward Centre',
+  setPanel(6,'Phase B - Evaluation','Step 6 - Rule 4: Pedestrian Paths Toward Centre',
     'Criterion: ≥50% of pedestrian/cycling paths oriented toward the zone centroid (±30° angular tolerance). This indicates paths designed to facilitate movement toward the local centre.',
     PIDS.map(pid => {
       const f = fw[pid] || {};
@@ -741,10 +743,10 @@ function step6() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 7 — RULE 5: PARKING
+// STEP 7 - RULE 5: PARKING
 // ═══════════════════════════════════════════════════════════════
 function step7() {
-  if (PIDS.length === 0) return noPatterns(7,'Phase B — Evaluation','Step 7 — Rule 5: Parking');
+  if (PIDS.length === 0) return noPatterns(7,'Phase B - Evaluation','Step 7 - Rule 5: Parking');
   const RULE_IDX = 4;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -776,14 +778,14 @@ function step7() {
   });
 
   const sm = DATA.parking.summary;
-  setLegend('Step 7 — Parking', `
+  setLegend('Step 7 - Parking', `
     <div class="leg-item"><span class="leg-dot" style="background:#43a047"></span>Within 150m boundary</div>
     <div class="leg-item"><span class="leg-dot" style="background:#c62828"></span>Outside buffer</div>
     <div class="leg-item"><span class="leg-dash" style="border-color:#ffd600"></span>150m boundary buffer</div>
     <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
-  setPanel(7,'Phase B — Evaluation','Step 7 — Rule 5: Parking Near Boundary',
+  setPanel(7,'Phase B - Evaluation','Step 7 - Rule 5: Parking Near Boundary',
     'Criterion: ≥2 parking locations within 150m of the ring road boundary. Parking should be accessible from the perimeter, not placed inside the residential core.',
     PIDS.map(pid => {
       const p = sm[pid] || {};
@@ -795,10 +797,10 @@ function step7() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 8 — RULE 6: SERVICES
+// STEP 8 - RULE 6: SERVICES
 // ═══════════════════════════════════════════════════════════════
 function step8() {
-  if (PIDS.length === 0) return noPatterns(8,'Phase B — Evaluation','Step 8 — Rule 6: Services');
+  if (PIDS.length === 0) return noPatterns(8,'Phase B - Evaluation','Step 8 - Rule 6: Services');
   const RULE_IDX = 5;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -834,13 +836,13 @@ function step8() {
       <span class="leg-dot" style="background:${col}"></span>${lbl} (${n})</div>`;
   }).join('');
 
-  setLegend('Step 8 — Services', `
+  setLegend('Step 8 - Services', `
     <div class="leg-item leg-toggle" onclick="toggleAllServCats()" style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #444">
       <span class="leg-chk on" id="srv-chk-all"></span><b>All services</b></div>
     ${catItems}`);
 
   const sm = DATA.services.summary;
-  setPanel(8,'Phase B — Evaluation','Step 8 — Rule 6: Services Present & Distributed',
+  setPanel(8,'Phase B - Evaluation','Step 8 - Rule 6: Services Present & Distributed',
     'Criterion: ≥5 service categories with ≥50 total services. A Local Transport Area must provide a complete set of daily services within walking distance.',
     PIDS.map(pid => {
       const p = sm[pid] || {};
@@ -852,10 +854,10 @@ function step8() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 9 — RULE 7: GREEN SPACES
+// STEP 9 - RULE 7: GREEN SPACES
 // ═══════════════════════════════════════════════════════════════
 function step9() {
-  if (PIDS.length === 0) return noPatterns(9,'Phase B — Evaluation','Step 9 — Rule 7: Green Spaces');
+  if (PIDS.length === 0) return noPatterns(9,'Phase B - Evaluation','Step 9 - Rule 7: Green Spaces');
   const RULE_IDX = 6;
   for (const pid of PIDS) {
     addL('zone_'+pid, patternVerdict(pid, DATA.rules[pid].verdicts[RULE_IDX], RULE_IDX));
@@ -874,7 +876,7 @@ function step9() {
     const col  = GREEN_STRS[pidI >= 0 ? pidI : 0];
     const fill = GREEN_FILLS[pidI >= 0 ? pidI : 0];
 
-    // 1.2km buffer — stored in LAYERS but NOT added to map
+    // 1.2km buffer - stored in LAYERS but NOT added to map
     LAYERS['gr_'+i] = L.circle([g.lat, g.lon], {
       radius:1200, color:col, weight:1.5, fillColor:fill, fillOpacity:0.07
     });
@@ -884,7 +886,7 @@ function step9() {
       radius:7, color:'#fff', fillColor:fill, fillOpacity:0.85, weight:2
     });
     m.bindTooltip(
-      `<b>${g.name || 'Park'}</b><br>${g.type} — ${(g.area_m2/10000).toFixed(2)} ha<br><i>Click to pin buffer</i>`,
+      `<b>${g.name || 'Park'}</b><br>${g.type} - ${(g.area_m2/10000).toFixed(2)} ha<br><i>Click to pin buffer</i>`,
       { sticky:true });
     m.on('mouseover', () => { if (!GREEN_BUFS_VISIBLE && !GREEN_CLICKED.has(i)) MAP.addLayer(LAYERS['gr_'+i]); });
     m.on('mouseout',  () => { if (!GREEN_BUFS_VISIBLE && !GREEN_CLICKED.has(i)) MAP.removeLayer(LAYERS['gr_'+i]); });
@@ -901,24 +903,24 @@ function step9() {
   });
 
   const sm = DATA.green.summary;
-  setLegend('Step 9 — Green Spaces', `
+  setLegend('Step 9 - Green Spaces', `
     ${PIDS.map((pid,i) => `<div class="leg-item"><span class="leg-dot" style="background:${GREEN_FILLS[i%GREEN_FILLS.length]};border:2px solid #fff"></span>Green space (${DATA.patterns[pid].short_label})</div>`).join('')}
     <div class="leg-item leg-toggle" onclick="toggleGreenBuffers()" style="margin-top:5px">
       <span class="leg-chk" id="green-buf-chk"></span>Show all 1.2 km buffers</div>
     <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes rule</div>
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
-  setPanel(9,'Phase B — Evaluation','Step 9 — Rule 7: Green Spaces',
+  setPanel(9,'Phase B - Evaluation','Step 9 - Rule 7: Green Spaces',
     'Criterion: ≥3 green spaces reachable within 15 min walking (~1.2 km). Green spaces must also be distributed across the zone, not concentrated in one corner.',
     PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX],
       (sm[pid] || {}).note || DATA.rules[pid].values[RULE_IDX])).join(''));
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 10 — SUMMARY SCORECARD
+// STEP 10 - SUMMARY SCORECARD
 // ═══════════════════════════════════════════════════════════════
 function step10() {
-  if (PIDS.length === 0) return noPatterns(10,'Phase B — Evaluation','★ Summary');
+  if (PIDS.length === 0) return noPatterns(10,'Phase B - Evaluation','★ Summary');
   const r = DATA.rules;
 
   for (const pid of PIDS) {
@@ -950,12 +952,12 @@ function step10() {
       style: { fillColor: fill, color: fill, weight:3, fillOpacity:0.18 }
     });
     layer.bindPopup(popup, { maxWidth:280 });
-    layer.bindTooltip(`<b>${pat.short_label}</b> — click for full scorecard`, {sticky:true});
+    layer.bindTooltip(`<b>${pat.short_label}</b> - click for full scorecard`, {sticky:true});
     addL('zone_'+pid, layer);
   }
 
   // Legend: both zone icons
-  setLegend('Step 10 — Results', `
+  setLegend('Step 10 - Results', `
     <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes (≥5/7 rules)</div>
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails (&lt;5/7 rules)</div>`);
 
@@ -975,7 +977,7 @@ function step10() {
     </div>`;
   };
 
-  setPanel(10,'Phase B — Evaluation','Step 10 — Results Summary',
+  setPanel(10,'Phase B - Evaluation','Step 10 - Results Summary',
     'Full evaluation of both candidate zones across all 7 rules. Click on a zone for the complete breakdown.',
     `<div class="rule-matrix">${PIDS.map(buildCard).join('')}</div>`);
 }
