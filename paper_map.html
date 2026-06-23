@@ -583,10 +583,14 @@ function step3() {
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${DATA.cells.stats.total - n3})</div>`);
 
   setPanel(3,'Phase A - Identification','Step 3 - Shape Filter (Rule 1)',
-    'Solidity ≥ 0.65 (compact, not overly concave) and Feret ratio ≥ 0.50 (not elongated). ' +
-    'Applied to both individual cells and composite aggregated zones on their merged geometry. ' +
-    'All survivors - direct or aggregated - appear in green.',
-    `<b>${n3 + PIDS.length}</b> candidates survive (${n3} direct · ${PIDS.length} aggregated)`);
+    `Due metriche:<br><br>
+     <b>Solidity &ge; 0.65</b> - rapporto tra l'area del poligono e l'area del suo guscio convesso.
+     Misura quanto il poligono &egrave; &ldquo;pieno&rdquo; senza rientranze eccessive.<br><br>
+     <b>Feret ratio &ge; 0.50</b> - rapporto tra diametro Feret minimo e massimo.
+     Misura quanto il poligono &egrave; &ldquo;compatto&rdquo; e non allungato.<br><br>
+     Applicato sia alle celle singole sia alle zone aggregate sulla loro geometria unita.
+     Tutti i sopravvissuti - diretti o aggregati - appaiono in verde.`,
+    `<b>${n3 + PIDS.length}</b> candidati superano il filtro (${n3} diretti · ${PIDS.length} aggregati)`);
 }
 
 // ═══════════════════════════════════════════════════════════════
