@@ -445,7 +445,8 @@ function step0() {
     <div class="leg-item"><span class="leg-line" style="background:#1565c0"></span>${label} (${total})</div>`);
 
   setPanel(0,'Phase A - Identification','Step 0 - Full Road Network',
-    'Complete OSM road graph for this city: residential streets, tracks, footways, service roads and more, at uniform visual weight. This is the raw input before any filtering. In Step 1 we restrict to primary, secondary and tertiary roads - the ones used to build the planar graph for polygonation.',
+    `Complete OSM road graph: residential streets, tracks, footways, service roads and more. Raw input before any filtering — in Step 1 we restrict to primary, secondary and tertiary roads used to build the planar graph.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Library: <b>osmnx</b> — downloads the road network graph directly from OpenStreetMap.</span>`,
     `<b>${total}</b> road segments (all types)`);
 }
 
@@ -498,7 +499,8 @@ function step1() {
     <div class="leg-item"><span class="leg-line" style="background:#f9a825"></span>Tertiary roads</div>`);
 
   setPanel(1,'Phase A - Identification','Step 1 - Road Network Polygonation',
-    `The OSM road graph is planarized into ${tot} closed polygons (faces of the planar graph). These are the spatial units from which candidate Local Transport Areas will be filtered. Toggle the polygon layer with the checkbox in the legend.`,
+    `The OSM road graph (primary, secondary, tertiary) is planarized into ${tot} closed polygons — the faces of the planar graph. These spatial units are the candidates to be filtered in the following steps.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Library: <b>shapely.ops.polygonize</b> — extracts closed polygon faces from the dissolved road network.</span>`,
     `<b>${tot}</b> raw polygons extracted from road network graph`);
 }
 
@@ -539,10 +541,9 @@ function step2() {
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${tot-n2})</div>`);
 
   setPanel(2,'Phase A - Identification','Step 2 - Feret Diameter Filter (Rule 1)',
-    'Each road polygon is measured with the Feret diameter (max caliper distance). ' +
-    'Polygons between 1.6 and 3.2 km - Alexander\'s "1–2 miles" - are kept. ' +
-    'When no single polygon is large enough, adjacent small polygons are merged into a composite candidate and re-measured. ' +
-    'Direct survivors have solid borders; aggregated candidates have dashed borders.',
+    `🔄 <b>Rule 1 — Ring roads delimit areas of 1–2 miles.</b><br><br>
+    Each polygon is measured with the Feret diameter (maximum caliper distance). Polygons between 1.6 and 3.2 km are kept. When no single polygon qualifies, adjacent small ones are merged iteratively and re-measured. Direct survivors: solid border; aggregated: dashed.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Library: <b>shapely</b> — <code>convex_hull.minimum_rotated_rectangle</code> gives the four corner points; the longest edge is the Feret diameter.</span>`,
     `<b>${n2}</b> of ${tot} individual cells pass · <b>${PIDS.length}</b> final candidate zone${PIDS.length!==1?'s':''}`);
 }
 
@@ -583,13 +584,12 @@ function step3() {
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${DATA.cells.stats.total - n3})</div>`);
 
   setPanel(3,'Phase A - Identification','Step 3 - Shape Filter (Rule 1)',
-    `Two metrics:<br><br>
-     <b>Solidity ≥ 0.65</b> - ratio between the polygon area and its convex hull area.
-     Measures how "filled" the polygon is, penalising excessive concavities.<br><br>
-     <b>Feret ratio ≥ 0.50</b> - ratio between minimum and maximum Feret diameter.
-     Measures how "compact" the polygon is, penalising elongated shapes.<br><br>
-     Applied to both individual cells and composite aggregated zones on their merged geometry.
-     All survivors - direct or aggregated - are shown in green.`,
+    `🔄 <b>Rule 1 — Ring roads delimit areas of 1–2 miles (shape quality check).</b><br><br>
+     Two metrics:<br><br>
+     <b>Solidity ≥ 0.65</b> - ratio between polygon area and its convex hull area. Measures how "filled" the polygon is, penalising excessive concavities.<br><br>
+     <b>Feret ratio ≥ 0.50</b> - ratio between minimum and maximum Feret diameter. Measures how "compact" the polygon is, penalising elongated shapes.<br><br>
+     Applied to both individual cells and aggregated zones on their merged geometry. All survivors are shown in green.<br><br>
+     <span style="color:#90caf9;font-size:11px">📦 Library: <b>shapely</b> — <code>geom.convex_hull</code> for solidity; <code>convex_hull.minimum_rotated_rectangle</code> for Feret ratio.</span>`,
     `<b>${n3 + PIDS.length}</b> candidati superano il filtro (${n3} diretti · ${PIDS.length} aggregati)`);
 }
 
@@ -627,7 +627,9 @@ function step4() {
     <div style="margin-top:6px;font-size:10px;color:#aaa">Criteria:<br>≥250 bldg/km²<br>Coverage ≥80%</div>`);
 
   setPanel(4,'Phase A - Identification','Step 4 - Urban Density Filter (Rule 2)',
-    'Apply urban density thresholds: ≥250 buildings/km² and building coverage ≥80%. Two areas pass all filters and are identified as candidate Local Transport Areas.',
+    `🏢 <b>Rule 2 — The area must be urban (≥250 buildings/km²).</b><br><br>
+    Two thresholds are applied: ≥250 buildings/km² (density) and building coverage ≥80% (uniformity — buildings must be spread across the zone, not clustered in a corner). Coverage is computed by buffering each building centroid by 50 m, unioning all buffers, intersecting with the cell, and dividing by cell area.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Libraries: <b>geopandas</b> (spatial join for building count); <b>shapely.ops.unary_union</b> + <code>buffer(50m)</code> for coverage ratio.</span>`,
     PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[1], DATA.rules[pid].values[1])).join(''));
 }
 
@@ -679,7 +681,9 @@ function step5() {
 
   const s = DATA.streets;
   setPanel(5,'Phase B - Evaluation','Step 5 - Rule 3: Parallel Major Roads',
-    'Criterion: ≥60% of major roads share the same orientation (±20° tolerance). A well-structured Local Transport Area has a dominant street direction.',
+    `🛣️ <b>Rule 3 — Major roads within the area are mostly parallel.</b><br><br>
+    Criterion: ≥60% of major roads share the same orientation (±20° tolerance). Roads are first grouped by OSM name and merged with <code>linemerge</code>; the bearing of each named road is the length-weighted circular mean of its segments. The dominant cluster is found with a greedy algorithm: each road seeds a cluster and all roads within ±20° join it; the largest cluster wins.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Libraries: <b>osmnx</b> (road graph download); <b>shapely.ops.linemerge</b> (merge segments by name); <b>numpy</b> (circular mean bearing).</span>`,
     PIDS.map(pid => {
       const sm = (s[pid] || {}).summary || {};
       const detail = sm.dom_pct != null
@@ -736,7 +740,9 @@ function step6() {
 
   const fw = DATA.footways;
   setPanel(6,'Phase B - Evaluation','Step 6 - Rule 4: Pedestrian Paths Toward Centre',
-    'Criterion: ≥50% of pedestrian/cycling paths oriented toward the zone centroid (±30° angular tolerance). This indicates paths designed to facilitate movement toward the local centre.',
+    `🚶 <b>Rule 4 — Pedestrian paths point toward the centre.</b><br><br>
+    Criterion: ≥50% of footway and pedestrian paths (OSM <code>highway=footway|pedestrian</code>) oriented toward the zone centroid (±45° tolerance), with a minimum of 10 paths required. The bearing of each path is compared to the bearing from its midpoint to the centroid; the difference must be ≤45° (undirected).<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Libraries: <b>geopandas</b> (load footways GPKG); Python <b>math</b> (bearing and angular difference computation).</span>`,
     PIDS.map(pid => {
       const f = fw[pid] || {};
       const detail = f.n_total != null
@@ -790,7 +796,9 @@ function step7() {
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
   setPanel(7,'Phase B - Evaluation','Step 7 - Rule 5: Parking Near Boundary',
-    'Criterion: ≥2 parking locations within 150m of the ring road boundary. Parking should be accessible from the perimeter, not placed inside the residential core.',
+    `🅿️ <b>Rule 5 — Parking near boundaries, not inside.</b><br><br>
+    Criterion: ≥2 parking locations within 150 m of the zone boundary. Parking should be accessible from the ring road perimeter, not placed inside the residential core. A 150 m buffer is computed around the zone boundary; parking points that fall inside it are counted as "near boundary".<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Data source: <b>Google Places API</b> (nearby search, type=parking); <b>shapely</b> <code>boundary.buffer(150m)</code> for proximity check.</span>`,
     PIDS.map(pid => {
       const p = sm[pid] || {};
       const detail = p.total != null
@@ -847,7 +855,9 @@ function step8() {
 
   const sm = DATA.services.summary;
   setPanel(8,'Phase B - Evaluation','Step 8 - Rule 6: Services Present & Distributed',
-    'Criterion: ≥5 service categories with ≥50 total services. A Local Transport Area must provide a complete set of daily services within walking distance.',
+    `🛒 <b>Rule 6 — Services present and distributed.</b><br><br>
+    Criterion: ≥5 service categories with ≥50 total services. Points of interest are collected within the zone and classified into 12 categories (Food & Drink, Retail, Health, Education, Public Services, Finance, Religion, Culture, Sport & Leisure, Accommodation, Green Space, Other).<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Data source: <b>Google Places API</b> (nearby search, multiple types); <b>pandas</b> for category aggregation.</span>`,
     PIDS.map(pid => {
       const p = sm[pid] || {};
       const detail = p.total != null
@@ -915,7 +925,9 @@ function step9() {
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails rule</div>`);
 
   setPanel(9,'Phase B - Evaluation','Step 9 - Rule 7: Green Spaces',
-    'Criterion: ≥3 green spaces reachable within 15 min walking (~1.2 km). Green spaces must also be distributed across the zone, not concentrated in one corner.',
+    `🌳 <b>Rule 7 — Green spaces present and distributed.</b><br><br>
+    Criterion: ≥3 green spaces within 1.2 km of the zone centroid (~15 min walking). A 1.2 km buffer is computed around each green space point; hover or click to show it. The toggle in the legend shows all buffers at once.<br><br>
+    <span style="color:#90caf9;font-size:11px">📦 Data source: <b>Google Places API</b> (nearby search, type=park); <b>shapely</b> <code>buffer(1200m)</code> for walkability check.</span>`,
     PIDS.map(pid => verdictHTML(pid, DATA.rules[pid].verdicts[RULE_IDX],
       (sm[pid] || {}).note || DATA.rules[pid].values[RULE_IDX])).join(''));
 }
@@ -982,7 +994,7 @@ function step10() {
   };
 
   setPanel(10,'Phase B - Evaluation','Step 10 - Results Summary',
-    'Full evaluation of both candidate zones across all 7 rules. Click on a zone for the complete breakdown.',
+    'Full evaluation of all candidate zones across all 7 Alexander rules. Click on a zone for the complete breakdown.',
     `<div class="rule-matrix">${PIDS.map(buildCard).join('')}</div>`);
 }
 
