@@ -376,7 +376,7 @@ function setPanel(stepNum, phase, title, desc, statsHtml) {
   phaseEl.style.color = phase.includes('A') ? '#90caf9' : '#ce93d8';
   document.getElementById('step-num-label').textContent = `Step ${stepNum}`;
   document.getElementById('step-title-text').textContent = title;
-  document.getElementById('step-desc-text').textContent  = desc;
+  document.getElementById('step-desc-text').innerHTML    = desc;
   document.getElementById('step-stats-text').innerHTML   = statsHtml;
   document.getElementById('info-panel').classList.remove('collapsed');
   document.querySelectorAll('.step-btn').forEach(b =>
@@ -583,13 +583,13 @@ function step3() {
     <div class="leg-item"><span class="leg-rect" style="background:#333;border:1px solid #555"></span>Filtered out (${DATA.cells.stats.total - n3})</div>`);
 
   setPanel(3,'Phase A - Identification','Step 3 - Shape Filter (Rule 1)',
-    `Due metriche:<br><br>
-     <b>Solidity &ge; 0.65</b> - rapporto tra l'area del poligono e l'area del suo guscio convesso.
-     Misura quanto il poligono &egrave; &ldquo;pieno&rdquo; senza rientranze eccessive.<br><br>
-     <b>Feret ratio &ge; 0.50</b> - rapporto tra diametro Feret minimo e massimo.
-     Misura quanto il poligono &egrave; &ldquo;compatto&rdquo; e non allungato.<br><br>
-     Applicato sia alle celle singole sia alle zone aggregate sulla loro geometria unita.
-     Tutti i sopravvissuti - diretti o aggregati - appaiono in verde.`,
+    `Two metrics:<br><br>
+     <b>Solidity ≥ 0.65</b> - ratio between the polygon area and its convex hull area.
+     Measures how "filled" the polygon is, penalising excessive concavities.<br><br>
+     <b>Feret ratio ≥ 0.50</b> - ratio between minimum and maximum Feret diameter.
+     Measures how "compact" the polygon is, penalising elongated shapes.<br><br>
+     Applied to both individual cells and composite aggregated zones on their merged geometry.
+     All survivors - direct or aggregated - are shown in green.`,
     `<b>${n3 + PIDS.length}</b> candidati superano il filtro (${n3} diretti · ${PIDS.length} aggregati)`);
 }
 
