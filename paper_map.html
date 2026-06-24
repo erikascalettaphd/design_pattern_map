@@ -295,7 +295,8 @@ async function init() {
   const centerLat = meta.center_lat || 0;
   const centerLon = meta.center_lon || 0;
   const zoom      = meta.zoom      || 13;
-  MAP = L.map('map', { zoomControl: false }).setView([centerLat, centerLon], zoom);
+  MAP = L.map('map', { zoomControl: false, preferCanvas: false }).setView([centerLat, centerLon], zoom);
+  const CANVAS = L.canvas({ padding: 0.5 }); // fast renderer for dense line layers
   L.control.zoom({ position: 'topright' }).addTo(MAP);
 
   const light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -425,6 +426,7 @@ function step0() {
     ? DATA.all_roads : DATA.roads;
 
   addL('roads', L.geoJSON(src, {
+    renderer: CANVAS,
     style: f => {
       const hw = (f.properties.highway || '').toLowerCase();
       const w  = hw === 'primary' ? 2.0
@@ -432,10 +434,6 @@ function step0() {
                : hw === 'tertiary'  ? 1.2
                : 0.8;
       return { color:'#1565c0', weight:w, opacity:0.9 };
-    },
-    onEachFeature(f,l) {
-      const hw = f.properties.highway || '';
-      if (hw) l.bindTooltip(hw, { sticky:true });
     }
   }));
 
@@ -650,6 +648,7 @@ function step5() {
     // Main streets: colored by bearing
     if (st.main.features.length) {
       addL('main_'+pid, L.geoJSON(st.main, {
+        renderer: CANVAS,
         style: f => ({ color: bearingColor(f.properties.bearing), weight:2.5, opacity:0.9 }),
         onEachFeature(f,l) {
           const p = f.properties;
@@ -664,6 +663,7 @@ function step5() {
     // Border streets: thin dashed
     if (st.border.features.length) {
       addL('border_'+pid, L.geoJSON(st.border, {
+        renderer: CANVAS,
         style: { color:'#78909c', weight:1.5, dashArray:'4,3', opacity:0.6 }
       }));
     }
@@ -709,6 +709,7 @@ function step6() {
 
     if (fw.features.features.length) {
       addL('fw_'+pid, L.geoJSON(fw.features, {
+        renderer: CANVAS,
         style: f => ({
           color:   f.properties.oriented ? '#43a047' : '#c62828',
           weight:  1.8,
