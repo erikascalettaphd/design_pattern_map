@@ -135,11 +135,31 @@
 
   /* Footer */
   .footer{
-    margin-top:56px;font-size:11px;color:#424242;
-    text-align:center;line-height:1.8;
+    margin-top:64px;border-top:1px solid #1e1e1e;padding:40px 24px 32px;
+    max-width:1100px;margin-left:auto;margin-right:auto;
   }
-  .footer a{color:#546e7a;text-decoration:none}
-  .footer a:hover{color:#90caf9}
+  .footer-brand{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+  .footer-logo{height:44px;filter:brightness(0) invert(1);opacity:.7}
+  .footer-logo-text{font-size:18px;font-weight:700;color:#e0e0e0;letter-spacing:.5px}
+  .footer-dept{font-size:12px;color:#616161;margin-left:4px}
+  .footer-authors{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-bottom:32px}
+  .footer-author{background:#1a1a1a;border-radius:10px;padding:18px 20px}
+  .footer-author-name{font-size:14px;font-weight:600;color:#e0e0e0;margin-bottom:3px}
+  .footer-author-role{font-size:11px;color:#757575;margin-bottom:10px;line-height:1.4}
+  .footer-author-email{font-size:11px;color:#546e7a;margin-bottom:12px}
+  .footer-author-email a{color:#546e7a;text-decoration:none}
+  .footer-author-email a:hover{color:#90caf9}
+  .footer-icons{display:flex;gap:10px}
+  .footer-icon{
+    display:flex;align-items:center;gap:5px;padding:5px 10px;
+    border-radius:6px;background:#242424;border:1px solid #2a2a2a;
+    font-size:11px;color:#9e9e9e;text-decoration:none;transition:all .2s;
+  }
+  .footer-icon:hover{background:#1565c0;border-color:#1565c0;color:#fff}
+  .footer-icon svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+  .footer-ref{font-size:11px;color:#424242;text-align:center;line-height:1.8;border-top:1px solid #1e1e1e;padding-top:20px}
+  .footer-ref a{color:#546e7a;text-decoration:none}
+  .footer-ref a:hover{color:#90caf9}
 </style>
 </head>
 <body>
@@ -362,9 +382,79 @@
 </div>
 
 <footer class="footer">
-  Based on C. Alexander et al., <em>A Pattern Language</em> (1977), Pattern 11 - Local Transport Areas.<br>
-  Data: <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors &middot;
-  <a href="https://github.com/erikascalettaphd/design_pattern_map" target="_blank">GitHub</a>
+
+  <div class="footer-brand">
+    <img class="footer-logo" src="https://www.unict.it/sites/default/files/2022-05/logo-unict-orizzontale-bianco.png" alt="UNICT" onerror="this.style.display='none'">
+    <div>
+      <div class="footer-logo-text">Università di Catania</div>
+      <div class="footer-dept">Department of Mathematics and Computer Science (DMI)</div>
+    </div>
+  </div>
+
+  <div class="footer-authors">
+
+    <!-- Erika Scaletta -->
+    <div class="footer-author">
+      <div class="footer-author-name">Erika Scaletta</div>
+      <div class="footer-author-role">PhD Student in Computer Science</div>
+      <div class="footer-author-email"><a href="mailto:erika.scaletta@phd.unict.it">erika.scaletta@phd.unict.it</a></div>
+      <div class="footer-icons">
+        <a class="footer-icon" href="https://web.dmi.unict.it/dottorandi/erika.scaletta" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>DMI
+        </a>
+        <a class="footer-icon" href="https://scholar.google.com/citations?user=HHEmF8QAAAAJ&hl=en" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 14l-4-2.5V6h8v5.5L12 14zm0 2l-7-4.375V5h14v6.625L12 16zm0 3.5L2 13V5h1v7.438L12 17.5l9-5.063V5h1v8L12 19.5z"/></svg>Scholar
+        </a>
+        <a class="footer-icon" href="https://www.linkedin.com/in/erika-scaletta-21712b161/" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+        </a>
+      </div>
+    </div>
+
+    <!-- Emiliano Tramontana -->
+    <div class="footer-author">
+      <div class="footer-author-name">Emiliano Tramontana</div>
+      <div class="footer-author-role">Associate Professor, DMI</div>
+      <div class="footer-author-email">&nbsp;</div>
+      <div class="footer-icons">
+        <a class="footer-icon" href="https://web.dmi.unict.it/docenti/emiliano.alessio.tramontana" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>DMI
+        </a>
+        <a class="footer-icon" href="https://scholar.google.com/citations?user=MFQB4UwAAAAJ&hl=en" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 14l-4-2.5V6h8v5.5L12 14zm0 2l-7-4.375V5h14v6.625L12 16zm0 3.5L2 13V5h1v7.438L12 17.5l9-5.063V5h1v8L12 19.5z"/></svg>Scholar
+        </a>
+        <a class="footer-icon" href="https://www.linkedin.com/in/emiliano-tramontana-1765752/" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+        </a>
+      </div>
+    </div>
+
+    <!-- Gabriella Verga -->
+    <div class="footer-author">
+      <div class="footer-author-name">Gabriella Verga</div>
+      <div class="footer-author-role">Researcher, DMI</div>
+      <div class="footer-author-email">&nbsp;</div>
+      <div class="footer-icons">
+        <a class="footer-icon" href="https://web.dmi.unict.it/docenti/gabriella.verga" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>DMI
+        </a>
+        <a class="footer-icon" href="https://scholar.google.com/citations?user=iiytETUAAAAJ&hl=en" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 14l-4-2.5V6h8v5.5L12 14zm0 2l-7-4.375V5h14v6.625L12 16zm0 3.5L2 13V5h1v7.438L12 17.5l9-5.063V5h1v8L12 19.5z"/></svg>Scholar
+        </a>
+        <a class="footer-icon" href="https://www.linkedin.com/in/gabriella-verga-394a6393/" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-ref">
+    Based on C. Alexander et al., <em>A Pattern Language</em> (1977), Pattern 11 - Local Transport Areas.<br>
+    Data: <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors &middot;
+    <a href="https://github.com/erikascalettaphd/design_pattern_map" target="_blank">GitHub</a>
+  </div>
+
 </footer>
 
 </body>
