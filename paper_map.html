@@ -192,7 +192,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 // ═══════════════════════════════════════════════════════════════
 // GLOBALS
 // ═══════════════════════════════════════════════════════════════
-let MAP, DATA;
+let MAP, DATA, CANVAS;
 let LAYERS = {};
 let CURRENT = 0;
 let POLY_VISIBLE = true;
@@ -296,7 +296,7 @@ async function init() {
   const centerLon = meta.center_lon || 0;
   const zoom      = meta.zoom      || 13;
   MAP = L.map('map', { zoomControl: false, preferCanvas: false }).setView([centerLat, centerLon], zoom);
-  const CANVAS = L.canvas({ padding: 0.5 }); // fast renderer for dense line layers
+  CANVAS = L.canvas({ padding: 0.5 }); // fast renderer for dense line layers
   L.control.zoom({ position: 'topright' }).addTo(MAP);
 
   const light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
