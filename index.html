@@ -782,12 +782,12 @@
     s.src = file;
     s.onload = function() {
       try {
-        var n = (window.DATA && window.DATA.patterns)
-                ? Object.keys(window.DATA.patterns).length : 0;
+        var n = (window.MAP_DATA && window.MAP_DATA.patterns)
+                ? Object.keys(window.MAP_DATA.patterns).length : 0;
         var st = card.querySelector('.status-text.ready');
         if (st) st.textContent = 'Analysis complete — ' + n + (n === 1 ? ' zone' : ' zones');
       } catch(e) {}
-      try { delete window.DATA; } catch(e) {}
+      try { delete window.MAP_DATA; } catch(e) {}
       s.remove();
       loadNext();
     };
