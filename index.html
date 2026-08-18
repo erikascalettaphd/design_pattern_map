@@ -765,36 +765,23 @@
 
 
 <script>
-/* Auto-populate zone counts from each city's data.js */
+/* Auto-populate zone counts from tiny {city}_meta.json files */
 (function() {
   var cards = Array.from(document.querySelectorAll('a.card:not(.disabled):not(.future)'));
-  var queue = cards.filter(function(c) {
-    return c.href && c.href.indexOf('_data.js') !== -1;
-  });
-  var idx = 0;
-  function loadNext() {
-    if (idx >= queue.length) return;
-    var card = queue[idx++];
-    var url   = new URL(card.href);
-    var file  = url.searchParams.get('data');
-    if (!file) { loadNext(); return; }
-    var s = document.createElement('script');
-    s.src = file;
-    s.onload = function() {
-      try {
-        var n = (window.MAP_DATA && window.MAP_DATA.patterns)
-                ? Object.keys(window.MAP_DATA.patterns).length : 0;
+  cards.forEach(function(card) {
+    if (!card.href || card.href.indexOf('_data.js') === -1) return;
+    var dataFile = new URL(card.href).searchParams.get('data');
+    if (!dataFile) return;
+    var metaFile = dataFile.replace('_data.js', '_meta.json');
+    fetch(metaFile)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var n  = (d && typeof d.zones === 'number') ? d.zones : 0;
         var st = card.querySelector('.status-text.ready');
         if (st) st.textContent = 'Analysis complete — ' + n + (n === 1 ? ' zone' : ' zones');
-      } catch(e) {}
-      try { delete window.MAP_DATA; } catch(e) {}
-      s.remove();
-      loadNext();
-    };
-    s.onerror = function() { s.remove(); loadNext(); };
-    document.head.appendChild(s);
-  }
-  loadNext();
+      })
+      .catch(function() { /* meta.json missing — keep existing text */ });
+  });
 })();
 </script>
 </body>
