@@ -35,7 +35,7 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 
 /* ── main area ───────────────────────────── */
 #main{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-#map{flex:1;min-height:0;z-index:1}
+#map{flex:1;min-height:0;z-index:1;background:#f2f4f5}
 
 /* ── info panel - mobile: slides from bottom ── */
 #info-panel{
@@ -187,12 +187,11 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidde
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // GLOBALS
 // ═══════════════════════════════════════════════════════════════
-let MAP, DATA, CANVAS;
+let MAP, DATA, CANVAS, BASE_GRAPH;
 let LAYERS = {};
 let CURRENT = 0;
 let POLY_VISIBLE = true;
@@ -295,18 +294,15 @@ async function init() {
   const centerLat = meta.center_lat || 0;
   const centerLon = meta.center_lon || 0;
   const zoom      = meta.zoom      || 13;
-  MAP = L.map('map', { zoomControl: false, preferCanvas: true }).setView([centerLat, centerLon], zoom);
+  MAP = L.map('map', { zoomControl: false, preferCanvas: true, maxZoom: 19 }).setView([centerLat, centerLon], zoom);
   CANVAS = L.canvas({ padding: 0.5 }); // fast renderer for dense line layers
   L.control.zoom({ position: 'topright' }).addTo(MAP);
 
-  const light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    { attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19 });
-  const dark  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    { attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19 });
-  const osm   = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    { attribution:'© OpenStreetMap', maxZoom:19 });
-  light.addTo(MAP);
-  L.control.layers({'Light (CartoDB)': light, 'Dark (CartoDB)': dark, 'OpenStreetMap': osm}, {}, { position:'topright' }).addTo(MAP);
+  // No raster basemap: the OSM road graph in *_data.js IS the background.
+  // The CartoDB/OSM tile layers were removed - CartoDB served "access denied"
+  // error tiles, and no external tile service is needed for these figures.
+  MAP.attributionControl.addAttribution('Road graph: &copy; OpenStreetMap contributors');
+  addBaseGraph();
 
   document.querySelectorAll('.step-btn').forEach(btn =>
     btn.addEventListener('click', () => goToStep(+btn.dataset.step)));
@@ -323,9 +319,35 @@ async function init() {
 // ═══════════════════════════════════════════════════════════════
 // LAYER HELPERS
 // ═══════════════════════════════════════════════════════════════
+// Vector basemap replacing the removed raster tiles: the full OSM road graph in
+// light grey, built once from *_data.js into its own pane under every step layer.
+// Kept out of LAYERS so clearLayers() never drops it.
+function addBaseGraph() {
+  const src = (DATA.all_roads && DATA.all_roads.features.length)
+    ? DATA.all_roads : DATA.roads;
+  if (!src || !src.features.length) return;
+
+  MAP.createPane('basegraph').style.zIndex = 250;   // below overlayPane (400)
+  BASE_GRAPH = L.geoJSON(src, {
+    pane: 'basegraph',
+    renderer: L.canvas({ padding: 0.5, pane: 'basegraph' }),
+    interactive: false,                              // never steal tooltips or clicks
+    style: f => {
+      const hw = (f.properties.highway || '').toLowerCase();
+      const w  = hw === 'primary'   ? 1.6
+               : hw === 'secondary' ? 1.3
+               : hw === 'tertiary'  ? 1.0
+               : 0.6;
+      return { color:'#c2c8ce', weight:w, opacity:0.95 };
+    }
+  }).addTo(MAP);
+}
+
 function clearLayers() {
   Object.values(LAYERS).forEach(l => { try { MAP.removeLayer(l); } catch(_) {} });
   LAYERS = {};
+  // Step 0 hides it to draw the same graph itself - restore it for every other step
+  if (BASE_GRAPH && !MAP.hasLayer(BASE_GRAPH)) BASE_GRAPH.addTo(MAP);
 }
 
 function addL(key, layer) { LAYERS[key] = layer; layer.addTo(MAP); return layer; }
@@ -422,6 +444,9 @@ function togglePolygons() {
 // STEP 0 - RAW ROAD GRAPH
 // ═══════════════════════════════════════════════════════════════
 function step0() {
+  // The grey base graph holds these same features - keep one full render at a time
+  if (BASE_GRAPH && MAP.hasLayer(BASE_GRAPH)) MAP.removeLayer(BASE_GRAPH);
+
   const src = (DATA.all_roads && DATA.all_roads.features.length)
     ? DATA.all_roads : DATA.roads;
 
