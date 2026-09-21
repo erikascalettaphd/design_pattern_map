@@ -196,6 +196,12 @@ let LAYERS = {};
 let CURRENT = 0;
 let POLY_VISIBLE = true;
 const PASS_COLOR = '#43a047', FAIL_COLOR = '#c62828';
+// Cities listed here draw the Step 10 zones in one neutral colour instead of the
+// green/red pass-fail encoding. The per-rule scorecard stays in the popup and in
+// the side panel, so nothing is lost - only the map stops colouring the verdict.
+// Match is on meta.city from *_data.js, lowercased.
+const NEUTRAL_SUMMARY_CITIES = new Set(['caltagirone']);
+const NEUTRAL_ZONE_COLOR     = '#1565c0';
 const PALETTE     = ['#1565c0','#6a1b9a','#2e7d32','#e65100','#006064'];
 let   ZONE_COLORS = {};
 let   PIDS        = [];
@@ -963,13 +969,14 @@ function step9() {
 function step10() {
   if (PIDS.length === 0) return noPatterns(10,'Phase B - Evaluation','★ Summary');
   const r = DATA.rules;
+  const neutral = NEUTRAL_SUMMARY_CITIES.has(((DATA.meta || {}).city || '').toLowerCase());
 
   for (const pid of PIDS) {
     const pat      = DATA.patterns[pid];
     const verdicts = r[pid].verdicts;
     const pass_n   = verdicts.filter(Boolean).length;
     const overall  = pass_n >= 5;
-    const fill     = overall ? PASS_COLOR : FAIL_COLOR;
+    const fill     = neutral ? NEUTRAL_ZONE_COLOR : (overall ? PASS_COLOR : FAIL_COLOR);
 
     addL('zone_bg_'+pid, L.geoJSON({ type:'Feature', geometry: pat.geometry }, {
       style: { fillColor: fill, color: fill, weight:3, fillOpacity:0.18 }
@@ -997,9 +1004,10 @@ function step10() {
     addL('zone_'+pid, layer);
   }
 
-  // Legend: both zone icons
-  setLegend('Step 10 - Results', `
-    <div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes (≥5/7 rules)</div>
+  // Legend: one neutral entry, or the pass/fail pair
+  setLegend('Step 10 - Results', neutral
+    ? `<div class="leg-item"><span class="leg-rect" style="background:${NEUTRAL_ZONE_COLOR}"></span>Candidate zone - click for scorecard</div>`
+    : `<div class="leg-item"><span class="leg-rect" style="background:${PASS_COLOR}"></span>Zone passes (≥5/7 rules)</div>
     <div class="leg-item"><span class="leg-rect" style="background:${FAIL_COLOR}"></span>Zone fails (&lt;5/7 rules)</div>`);
 
   // Rule matrix in panel
